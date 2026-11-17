@@ -2,7 +2,7 @@ import React, {useMemo} from 'react';
 import * as THREE from 'three';
 import {RoundedBoxGeometry} from 'three/examples/jsm/geometries/RoundedBoxGeometry.js';
 
-export type Mouth = 'smile' | 'open' | 'o' | 'grin' | 'flat';
+export type Mouth = 'smile' | 'open' | 'o' | 'grin' | 'flat' | 'laugh';
 export type B2Pose = {
   x: number; y?: number; z: number; yaw: number;
   lift?: number; sx?: number; sy?: number; sz?: number; pitch?: number; roll?: number;

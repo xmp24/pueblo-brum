@@ -113,7 +113,7 @@ function useStreets() {
 
 // ---------------------------------------------------------------- instancias estáticas por manzana
 type Inst = {key: string; part: {geo: THREE.BufferGeometry; mat: THREE.Material}; mats: THREE.Matrix4[]};
-function useInstances(lib: Lib) {
+function useInstances(lib: Lib, skip?: (p: Place) => boolean) {
   return useMemo(() => {
     const groups = new Map<string, Inst>();
     const tmp = new THREE.Object3D();
@@ -130,7 +130,7 @@ function useInstances(lib: Lib) {
         groups.get(kk)!.mats.push(m.clone());
       }
     };
-    places.filter((p) => p.m !== 'garaje').forEach(add);
+    places.filter((p) => p.m !== 'garaje' && !(skip && skip(p))).forEach(add);
     return [...groups.values()].map((g) => {
       const im = new THREE.InstancedMesh(g.part.geo, g.part.mat, g.mats.length);
       g.mats.forEach((m, i) => im.setMatrixAt(i, m));
@@ -232,9 +232,9 @@ function useSigns() {
 }
 
 // ---------------------------------------------------------------- mundo
-export const World: React.FC<{lib: Lib; t: number; garageOpen: number; traffic?: boolean}> = ({lib, t, garageOpen, traffic = true}) => {
+export const World: React.FC<{lib: Lib; t: number; garageOpen: number; traffic?: boolean; skip?: (p: Place) => boolean}> = ({lib, t, garageOpen, traffic = true, skip}) => {
   const st = useStreets();
-  const inst = useInstances(lib);
+  const inst = useInstances(lib, skip);
   const tr = useTraffic(lib);
   const signs = useSigns();
   const tex = useMemo(() => ({grass: grassTex(), asph: asphaltTex(), bay: bayTex(), walk: walkTex(), plaza: plazaTex(), crop: cropTex(), sand: sandTex()}), []);

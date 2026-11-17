@@ -49,9 +49,22 @@ function build(src: THREE.Object3D) {
   n.ceja.forEach((o, i) => (n.rest['ceja' + i] = o.position.clone()));
   n.ruedas.forEach((o, i) => (n.rest['r' + i] = o.position.clone()));
   root.traverse((m) => { const mesh = m as THREE.Mesh; if (mesh.isMesh) { mesh.castShadow = true; mesh.receiveShadow = true; } });
-  return n;
+  // brazo telescópico (se alarga en la dirección del brazo)
+  let boomMat: THREE.Material | null = null;
+  n.brazo.traverse((m) => { const mesh = m as THREE.Mesh; if (!boomMat && mesh.isMesh && /amarill/i.test((mesh.material as THREE.Material).name)) boomMat = mesh.material as THREE.Material; });
+  if (!boomMat) n.brazo.traverse((m) => { const mesh = m as THREE.Mesh; if (!boomMat && mesh.isMesh) boomMat = mesh.material as THREE.Material; });
+  const tele = new THREE.Mesh(new THREE.BoxGeometry(0.17, 0.17, 1), (boomMat as unknown as THREE.Material).clone());
+  tele.castShadow = true; tele.visible = false; n.brazo.add(tele);
+  // boca de carcajada (media luna oscura con dientes y lengua) delante de la cara
+  const laugh = new THREE.Group(); laugh.position.set(0, 1.27, 1.455); laugh.visible = false;
+  const half = (w: number, h: number) => { const sh = new THREE.Shape(); sh.moveTo(-w / 2, 0); for (let i = 0; i <= 24; i++) { const a = Math.PI + (Math.PI * i) / 24; sh.lineTo(Math.cos(a) * w / 2, Math.sin(a) * h); } sh.lineTo(w / 2, 0); return new THREE.ExtrudeGeometry(sh, {depth: 0.03, bevelEnabled: true, bevelSize: 0.012, bevelThickness: 0.01, bevelSegments: 2}); };
+  const mo = new THREE.Mesh(half(0.72, 0.3), new THREE.MeshStandardMaterial({color: '#2a0705', roughness: 0.5}));
+  const to = new THREE.Mesh(half(0.36, 0.1), new THREE.MeshStandardMaterial({color: '#f05a6a', roughness: 0.5})); to.position.set(0, -0.19, 0.012);
+  const te = new THREE.Mesh(new THREE.BoxGeometry(0.56, 0.07, 0.03), new THREE.MeshStandardMaterial({color: '#fbfbf6', roughness: 0.3})); te.position.set(0, -0.045, 0.03);
+  laugh.add(mo, to, te); bruno.add(laugh);
+  return {...n, tele, laugh};
 }
-const _v = new THREE.Vector3();
+const _v = new THREE.Vector3(), _d = new THREE.Vector3(), _z = new THREE.Vector3(0, 0, 1);
 
 export const BrunoGLB: React.FC<{lib: Lib; p: B2Pose}> = ({lib, p}) => {
   const n = useMemo(() => build(lib.bruno), [lib]);
@@ -59,6 +72,14 @@ export const BrunoGLB: React.FC<{lib: Lib; p: B2Pose}> = ({lib, p}) => {
   const arm = ((p.arm ?? 0) * Math.PI) / 180;
   n.brazo.rotation.set(arm, 0, 0);
   _v.copy(ARM_TIP).applyAxisAngle(new THREE.Vector3(1, 0, 0), arm).add(n.rest.brazo);
+  const ext = (p as any).ext ?? 0;
+  if (ext > 0.01) {
+    _d.copy(ARM_TIP).normalize();
+    n.tele.visible = true;
+    n.tele.position.copy(ARM_TIP).addScaledVector(_d, ext / 2 - 0.1).add(n.rest.brazo).sub(n.rest.brazo);
+    n.tele.quaternion.setFromUnitVectors(_z, _d); n.tele.scale.set(1, 1, ext + 0.25);
+    _v.copy(ARM_TIP).addScaledVector(_d, ext).applyAxisAngle(new THREE.Vector3(1, 0, 0), arm).add(n.rest.brazo);
+  } else n.tele.visible = false;
   n.gancho.position.copy(_v);
   n.gancho.rotation.set(p.hookSway ?? 0, 0, (p.hookSway ?? 0) * 0.6);
   const eo = Math.max(0.05, Math.min(1, p.eyeOpen));
@@ -78,9 +99,12 @@ export const BrunoGLB: React.FC<{lib: Lib; p: B2Pose}> = ({lib, p}) => {
     c.position.set(n.rest['ceja' + i].x, n.rest['ceja' + i].y + brow * 0.09 - (closed ? 0.03 : 0), n.rest['ceja' + i].z);
     c.rotation.set(0, 0, sg * bt * 0.45);
   });
-  const mouth = p.mouth ?? 'smile', tk = Math.max(0, Math.min(1, p.talk ?? 0));
-  const open = mouth === 'open' || tk > 0.12;
+  const mouth = (p.mouth ?? 'smile') as string, tk = Math.max(0, Math.min(1, p.talk ?? 0));
+  const isLaugh = mouth === 'laugh';
+  n.laugh.visible = isLaugh; n.laugh.scale.set(1, isLaugh ? 0.8 + 0.35 * tk : 1, 1);
+  const open = !isLaugh && (mouth === 'open' || tk > 0.12);
   if (n.boca.smile) { n.boca.smile.visible = !open && (mouth === 'smile' || mouth === 'grin'); n.boca.smile.scale.copy(n.boca.smile.userData.s0).multiplyScalar(mouth === 'grin' ? 1.25 : 1); }
+  if (isLaugh && n.boca.smile) n.boca.smile.visible = false;
   n.boca.open.visible = open; n.boca.open.scale.copy(n.boca.open.userData.s0); n.boca.open.scale.y *= mouth === 'open' ? 1 : 0.35 + tk * 0.75;
   if (n.boca.o) n.boca.o.visible = !open && mouth === 'o';
   if (n.boca.flat) n.boca.flat.visible = !open && mouth === 'flat';

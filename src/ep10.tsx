@@ -472,11 +472,12 @@ function cam10(t: number): Cam {
 }
 
 // ---------------------------------------------------------------- luz, cielo y noche
-const Rig: React.FC<{te: number; lib: Lib}> = ({te, lib}) => {
+export const VFOV = (fov: number, vert: boolean) => (vert ? (2 * Math.atan(Math.tan((fov * Math.PI) / 360) * 1.75) * 180) / Math.PI : fov);
+const Rig: React.FC<{te: number; lib: Lib; vert?: boolean}> = ({te, lib, vert = false}) => {
   const {camera, scene} = useThree();
   const c = cam10(te);
   camera.position.set(...c.pos); camera.lookAt(...c.at);
-  const pc = camera as THREE.PerspectiveCamera; pc.fov = c.fov; pc.near = 0.1; pc.far = 1400; pc.updateProjectionMatrix();
+  const pc = camera as THREE.PerspectiveCamera; pc.fov = VFOV(c.fov, vert); pc.near = 0.1; pc.far = 1400; pc.updateProjectionMatrix();
   const nk = nightK(te), dawn = 1 - prog(te, 0, 5);
   scene.background = lib.sky; scene.environment = lib.sky;
   (scene as any).backgroundIntensity = (1.0 - dawn * 0.25) * (1 - 0.88 * nk); (scene as any).environmentIntensity = 0.55 * (1 - 0.65 * nk);
@@ -782,10 +783,11 @@ const obstacle10 = (t: number): [number, number] | null => {
   return null;
 };
 
-export const Ep10: React.FC = () => {
+export const Ep10: React.FC<{t0?: number}> = ({t0 = 0}) => {
   const frame = useCurrentFrame();
   const {fps, width, height} = useVideoConfig();
-  const t = IP.t ?? frame / fps;
+  const t = IP.t ?? frame / fps + t0;
+  const vert = height > width, OW = vert ? width * 1.25 : width;
   const te = remap(t);
   const [ready, setReady] = useState(false);
   const [h] = useState(() => delayRender('fuentes'));
@@ -796,15 +798,17 @@ export const Ep10: React.FC = () => {
   return (
     <AbsoluteFill style={{background: '#a9dcff'}}>
       <ThreeCanvas width={width} height={height} shadows gl={{antialias: false, preserveDrawingBuffer: true, powerPreference: 'high-performance'}} camera={{fov: 40, position: [0, 5, 20]}}>
-        <Rig te={te} lib={lib} />
+        <Rig te={te} lib={lib} vert={vert} />
         <Lights te={te} />
         <World lib={lib} t={te} garageOpen={garageOpenAt(te) * (te > M.door + 1 ? 1 - easeInOut(prog(te, M.door + 1.0, M.door + 2.4)) : 1)} />
         <Part1Scene t={Math.min(te, 900)} lib={lib} />
         <Scene10 te={te} lib={lib} />
         <Post off={!!IP.nopost} ao={!IP.noao} />
       </ThreeCanvas>
-      {te < T3 ? <Overlay t={te} W={width} /> : null}
-      <Overlay10 t={t} W={width} />
+      <div style={{position: 'absolute', left: (width - OW) / 2, top: 0, width: OW, height}}>
+        {te < T3 ? <Overlay t={te} W={OW} /> : null}
+        <Overlay10 t={t} W={OW} />
+      </div>
     </AbsoluteFill>
   );
 };

@@ -24,13 +24,17 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with: {node-version: 22}
-      - run: npm ci --no-audit --no-fund
-      - run: npx remotion bundle src/index.ts --out-dir=build && npx remotion browser ensure
+      - if: ${{ matrix.i < fromJSON(inputs.jobs) }}
+        run: npm ci --no-audit --no-fund
+      - if: ${{ matrix.i < fromJSON(inputs.jobs) }}
+        run: npx remotion bundle src/index.ts --out-dir=build && npx remotion browser ensure
       - name: Render
+        if: ${{ matrix.i < fromJSON(inputs.jobs) }}
         env: {I: '${{ matrix.i }}', N: '${{ inputs.jobs }}', TOTAL: '${{ inputs.frames }}', COMP: '${{ inputs.comp }}'}
         run: |
           set -e
           PER=$(( (TOTAL + N - 1) / N )); S=$(( I * PER )); E=$(( S + PER - 1 )); [ $E -ge $TOTAL ] && E=$(( TOTAL - 1 ))
+          if [ $I -ge $N ] || [ $S -ge $TOTAL ]; then echo "sin trabajo"; exit 0; fi
           ok=0
           for try in 1 2 3; do
             if npx remotion render build $COMP seg.mp4 --frames=$S-$E --muted --gl=swangle --concurrency=4 --crf=16 --x264-preset=veryfast --jpeg-quality=94 --log=error --timeout=300000; then
@@ -45,6 +49,7 @@ jobs:
           openssl enc -aes-256-cbc -pbkdf2 -pass file:k.txt -in seg.mp4 -out seg.bin
           rm -f k.txt seg.mp4; mkdir -p /tmp/out && mv seg.bin k.enc /tmp/out/ && echo "$S $E" > /tmp/out/range.txt
       - name: Push
+        if: ${{ matrix.i < fromJSON(inputs.jobs) }}
         working-directory: /tmp/out
         run: |
           git init -q -b out && git add -A && git -c user.name=atlas -c user.email=atlas@users.noreply.github.com commit -qm "seg ${{ matrix.i }}"

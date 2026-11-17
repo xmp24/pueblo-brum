@@ -10,7 +10,7 @@ export type Part = {geo: THREE.BufferGeometry; mat: THREE.Material};
 export type Asset = {name: string; parts: Part[]; sub: Record<string, {parts: Part[]; m: THREE.Matrix4}[]>; node: THREE.Object3D};
 export type Lib = {assets: Record<string, Asset>; bruno: THREE.Object3D; sky: THREE.Texture};
 
-const FILES = ['edificios', 'vehiculos', 'props', 'arboles', 'personajes'];
+const FILES = ['edificios', 'vehiculos', 'props', 'arboles', 'personajes', 'cap2'];
 const SPLIT = /^(rueda[A-Z]{2}|puerta_enrollable|ojosA|bocaA|escalera|pala|sirena[RB]|chimenea)/; // subárboles animables que se separan
 
 const matCache = new Map<string, THREE.Material>();

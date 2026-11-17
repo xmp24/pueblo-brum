@@ -534,7 +534,109 @@ def globos():
 def personajes():
     lola(); tico(); coco(); globos()
 
-{'personajes': personajes, 'vehiculos': vehiculos, 'edificios': edificios, 'props': props, 'arboles': arboles}[what]()
+def lathe(name, prof, m, parent, loc=(0, 0, 0), seg=48, thick=0.0):
+    import bmesh
+    from mathutils import Vector
+    me = bpy.data.meshes.new(name); bm = bmesh.new()
+    vs = [bm.verts.new((r, 0, h)) for r, h in prof]
+    for i in range(len(vs) - 1): bm.edges.new((vs[i], vs[i + 1]))
+    bmesh.ops.spin(bm, geom=bm.verts[:] + bm.edges[:], cent=(0, 0, 0), axis=(0, 0, 1), angle=math.pi * 2, steps=seg, use_merge=True)
+    bmesh.ops.remove_doubles(bm, verts=bm.verts, dist=1e-4)
+    bm.to_mesh(me); bm.free()
+    from lib import _link, _finish, apply_mods
+    ob = _link(bpy.data.objects.new(name, me), parent); ob.location = loc
+    if thick:
+        so = ob.modifiers.new('so', 'SOLIDIFY'); so.thickness = thick; apply_mods(ob)
+    return _finish(ob, m, angle=60)
+
+def cap2():
+    ORO = mat('oro', '#f2b632', 0.22, metal=0.85, coat=0.6)
+    ORO2 = mat('oro_osc', '#c98a12', 0.3, metal=0.8)
+    # ---- campana gigante (1.5 m + corona), apoyada en el suelo
+    c = empty('campana_gigante')
+    prof = [(0.80, 0.0), (0.83, 0.06), (0.80, 0.14), (0.70, 0.28), (0.60, 0.52), (0.52, 0.82), (0.48, 1.08), (0.45, 1.26), (0.36, 1.42), (0.18, 1.5), (0.0, 1.52)]
+    lathe('cuerpo_c', prof, ORO, c, thick=0.07)
+    for h, r in ((0.2, 0.735), (0.32, 0.67), (1.18, 0.465)):
+        torus('aro_c', r, 0.035, (0, 0, h), ORO2, parent=c, seg=48, rseg=10)
+    torus('corona', 0.17, 0.06, (0, 0, 1.66), ORO2, parent=c, seg=24, rseg=10, rot=(math.pi / 2, 0, 0))
+    cyl('cuello', 0.16, 0.12, (0, 0, 1.53), ORO2, parent=c, verts=24)
+    cyl('vara', 0.03, 1.0, (0, 0, 1.0), DKG, parent=c, verts=10)
+    sphere('badajo', 0.17, (0, 0, 0.42), DKG, parent=c, seg=16, rings=10)
+    # ---- torre del reloj (rota) para la plaza
+    t = empty('torre_reloj')
+    PIE = mat('piedra', '#b9b2a6', 0.85); LAD = mat('ladrillo', '#c8643c', 0.8); CRE = mat('crema', '#fff1d2', 0.6)
+    AZ = mat('tejado_azul', '#3d6fd1', 0.45); MAD = mat('madera', '#8a5a34', 0.7); OSC = mat('grieta', '#3a2418', 0.9)
+    rbox('zocalo', (4.0, 4.0, 1.0), (0, 0, 0.5), 0.12, PIE, parent=t)
+    rbox('fuste', (3.2, 3.2, 7.6), (0, 0, 1.0 + 3.8), 0.06, LAD, parent=t)
+    for sx in (-1, 1):
+        for sy in (-1, 1):
+            for k in range(7):
+                rbox('sillar', (0.5, 0.5, 0.45), (sx * 1.55, sy * 1.55, 1.4 + k * 1.05), 0.05, CRE, parent=t)
+    rbox('cornisa1', (3.7, 3.7, 0.3), (0, 0, 8.7), 0.08, CRE, parent=t)
+    rbox('reloj_cuerpo', (3.4, 3.4, 2.6), (0, 0, 10.1), 0.1, CRE, parent=t)
+    rbox('cornisa2', (3.8, 3.8, 0.32), (0, 0, 11.5), 0.08, CRE, parent=t)
+    # puerta
+    rbox('puerta', (1.1, 0.12, 1.9), (0, -1.62, 1.95), 0.06, MAD, parent=t)
+    cyl('puerta_arco', 0.55, 0.12, (0, -1.62, 2.9), MAD, parent=t, rot=(math.pi / 2, 0, 0), verts=24)
+    # esferas en las 4 caras
+    for k in range(4):
+        a = k * math.pi / 2
+        dx, dy = math.sin(a), -math.cos(a)
+        e = empty('esfera%d' % k, (dx * 1.71, dy * 1.71, 10.15), t); e.rotation_euler = (0, 0, a)
+        cyl('esfera_b', 1.05, 0.1, (0, 0, 0), mat('oro', '#f2b632', 0.22, metal=0.85, coat=0.6), parent=e, rot=(math.pi / 2, 0, 0), verts=48)
+        cyl('esfera', 0.93, 0.12, (0, -0.02, 0), WH, parent=e, rot=(math.pi / 2, 0, 0), verts=48)
+        for h in range(12):
+            b = h * math.pi / 6
+            rbox('marca', (0.07, 0.04, 0.2 if h % 3 == 0 else 0.12), (math.sin(b) * 0.78, -0.09, math.cos(b) * 0.78), 0.01, DKG, parent=e, rot=(0, -b, 0))
+        # agujas paradas y torcidas
+        rbox('aguja_h', (0.09, 0.04, 0.5), (0.2, -0.12, -0.12), 0.02, DKG, parent=e, rot=(0, math.radians(-118), 0))
+        rbox('aguja_m', (0.06, 0.04, 0.72), (-0.27, -0.14, -0.2), 0.02, DKG, parent=e, rot=(0, math.radians(128), 0))
+        sphere('eje', 0.07, (0, -0.15, 0), DKG, parent=e, seg=12, rings=8)
+        # cristal roto: grietas
+    # campanario vacío
+    for sx in (-1, 1):
+        for sy in (-1, 1):
+            rbox('pilar', (0.55, 0.55, 2.6), (sx * 1.5, sy * 1.5, 13.0), 0.06, LAD, parent=t)
+    rbox('suelo_camp', (3.6, 3.6, 0.2), (0, 0, 11.75), 0.04, PIE, parent=t)
+    for k in range(4):
+        a = k * math.pi / 2
+        rbox('arco', (3.4, 0.4, 0.4), (math.sin(a) * 1.5, -math.cos(a) * 1.5, 14.1), 0.05, LAD, parent=t, rot=(0, 0, a))
+    rbox('viga_rota', (0.22, 3.0, 0.22), (0.1, 0, 13.3), 0.03, MAD, parent=t, rot=(math.radians(9), 0, math.radians(4)))
+    rbox('cornisa3', (4.0, 4.0, 0.3), (0, 0, 14.45), 0.08, CRE, parent=t)
+    # tejado piramidal con hueco
+    me = bpy.data.meshes.new('tejado')
+    import bmesh
+    bm = bmesh.new(); W = 2.15
+    v = [bm.verts.new(p) for p in [(-W, -W, 0), (W, -W, 0), (W, W, 0), (-W, W, 0), (0, 0, 3.0)]]
+    for f in [(0, 1, 4), (1, 2, 4), (2, 3, 4), (3, 0, 4), (3, 2, 1, 0)]: bm.faces.new([v[i] for i in f])
+    bm.to_mesh(me); bm.free()
+    from lib import _link, _finish, apply_mods
+    ro = _link(bpy.data.objects.new('tejado', me), t); ro.location = (0, 0, 14.6)
+    so = ro.modifiers.new('so', 'SOLIDIFY'); so.thickness = 0.12; apply_mods(ro); _finish(ro, AZ, smooth=False)
+    rbox('teja_falta', (0.7, 0.05, 0.5), (0.5, -1.4, 15.2), 0.02, OSC, parent=t, rot=(math.radians(-55), 0, 0))
+    sphere('pomo', 0.22, (0, 0, 17.75), mat('oro', '#f2b632', 0.22, metal=0.85, coat=0.6), parent=t, seg=20, rings=12)
+    cyl('mastil', 0.04, 0.9, (0, 0, 18.2), DKG, parent=t, verts=8)
+    rbox('veleta', (0.7, 0.03, 0.3), (0.18, 0, 18.5), 0.02, DKG, parent=t, rot=(0, 0, math.radians(20)))
+    # grietas y ladrillos que faltan
+    for (x, z, rz, L) in ((-0.6, 5.2, 25, 1.3), (0.7, 3.4, -35, 1.0), (-0.2, 7.3, 60, 0.9)):
+        rbox('grieta', (L, 0.04, 0.06), (x, -1.61, z), 0.0, OSC, parent=t, rot=(0, math.radians(rz), 0))
+    for (x, z) in ((0.9, 6.3), (-0.9, 2.6)):
+        rbox('hueco', (0.45, 0.06, 0.22), (x, -1.6, z), 0.02, OSC, parent=t)
+    # ---- vagón plataforma de Coco
+    v = empty('vagon_plano')
+    rbox('base', S(1.8, 0.35, 3.4), P(0, 0.7, 0), 0.1, DKG, parent=v)
+    rbox('suelo', S(2.0, 0.18, 3.6), P(0, 0.95, 0), 0.06, mat('madera_cl', '#c08a52', 0.7), parent=v)
+    for sx in (-1, 1):
+        rbox('borde', S(0.12, 0.3, 3.6), P(sx * 0.95, 1.15, 0), 0.04, mat('rojo_v', '#ff3b30', 0.4), parent=v)
+    for k in range(4): rbox('taco', S(0.3, 0.22, 0.3), P(0.55 * (1 if k % 2 else -1), 1.15, 0.55 * (1 if k < 2 else -1)), 0.05, MAD, parent=v)
+    for nm2, (x, z) in {'ruedaFL': (0.72, 1.0), 'ruedaFR': (-0.72, 1.0), 'ruedaRL': (0.72, -1.0), 'ruedaRR': (-0.72, -1.0)}.items():
+        wheel(nm2, x, z, 0.38, 0.18, v, '#ff3b30')
+    # ---- mapa enrollado
+    m = empty('mapa')
+    cyl('rollo', 0.09, 0.62, P(0, 0.09, 0), mat('papel', '#f1deb0', 0.8), parent=m, rot=(0, math.pi / 2, 0), verts=20)
+    cyl('cinta', 0.095, 0.08, P(0, 0.09, 0), mat('cinta', '#d63a2c', 0.5), parent=m, rot=(0, math.pi / 2, 0), verts=20)
+
+{'cap2': cap2, 'personajes': personajes, 'vehiculos': vehiculos, 'edificios': edificios, 'props': props, 'arboles': arboles}[what]()
 meshes = [o for o in bpy.context.scene.objects if o.type == 'MESH']
 def bake_roots(samples=16, lo=0.45):
     sc = bpy.context.scene
