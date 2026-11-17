@@ -305,3 +305,39 @@ export const ScriptCar: React.FC<{lib: Lib; m: string; x: number; z: number; yaw
     </group>
   );
 };
+
+// personaje genérico (Lola, Tico, Coco, vagones): parpadeo, boca, escalera, pala, sirenas, chimenea y ruedas
+export type CharPose = {x: number; z: number; yaw: number; y?: number; roll?: number; pitch?: number; dist?: number; s?: number; sy?: number;
+  blink?: number; talk?: number; ladder?: number; arm?: number; siren?: number; puff?: number; tint?: string};
+export const Char: React.FC<{lib: Lib; m: string; p: CharPose; children?: React.ReactNode}> = ({lib, m, p, children}) => {
+  const a = lib.assets[m];
+  if (!a) return null;
+  const sub = (k: string, f: (j: number) => {rot?: [number, number, number]; scale?: [number, number, number]; vis?: boolean; pos?: [number, number, number]}) =>
+    (a.sub[k] || []).map((w, j) => {
+      const o = f(j);
+      if (o.vis === false) return null;
+      return (
+        <group key={k + j} matrixAutoUpdate={false} matrix={w.m}>
+          <group rotation={o.rot ?? [0, 0, 0]} scale={o.scale ?? [1, 1, 1]} position={o.pos ?? [0, 0, 0]}>{w.parts.map((pt, i) => <mesh key={i} geometry={pt.geo} material={pt.mat} castShadow />)}</group>
+        </group>
+      );
+    });
+  const tk = Math.max(0, Math.min(1, p.talk ?? 0)), bl = Math.max(0.06, 1 - (p.blink ?? 0));
+  const wheelR = (j: number) => { const w = a.sub.rueda[j]; return Math.max(0.3, new THREE.Vector3().setFromMatrixPosition(w.m).y); };
+  return (
+    <group position={[p.x, p.y ?? 0, p.z]} rotation={[0, p.yaw, 0]} scale={[p.s ?? 1, (p.s ?? 1) * (p.sy ?? 1), p.s ?? 1]}>
+      <group rotation={[p.pitch ?? 0, 0, p.roll ?? 0]}>
+        {a.parts.map((pt, i) => <mesh key={i} geometry={pt.geo} material={pt.mat} castShadow receiveShadow />)}
+        {sub('ojosA', () => ({scale: [1, bl, 1]}))}
+        {sub('bocaA', () => ({scale: [1, 0.15 + tk * 1.1, 1], vis: tk > 0.05}))}
+        {sub('escalera', () => ({rot: [-(p.ladder ?? 0) * 0.7, 0, 0]}))}
+        {sub('pala', () => ({rot: [-(p.arm ?? 0), 0, 0]}))}
+        {sub('sirenaR', () => ({vis: (p.siren ?? 0) > 0 ? Math.sin((p.siren ?? 0) * 14) > 0 : true, scale: (p.siren ?? 0) > 0 ? [1.15, 1.15, 1.15] : [1, 1, 1]}))}
+        {sub('sirenaB', () => ({vis: (p.siren ?? 0) > 0 ? Math.sin((p.siren ?? 0) * 14) <= 0 : true, scale: (p.siren ?? 0) > 0 ? [1.15, 1.15, 1.15] : [1, 1, 1]}))}
+        {sub('chimenea', () => ({scale: [1 + (p.puff ?? 0) * 0.15, 1 - (p.puff ?? 0) * 0.12, 1 + (p.puff ?? 0) * 0.15]}))}
+        {sub('rueda', (j) => ({rot: [(p.dist ?? 0) / wheelR(j), 0, 0]}))}
+        {children}
+      </group>
+    </group>
+  );
+};

@@ -196,9 +196,7 @@ for c in range(2):
     sfx[c] += oaconvolve(sfx[c], ir[c])[:N] * 0.4
     vo[c] += oaconvolve(vo[c], ir[c])[:N] * 0.08
 mix = mus * (0.7 * (1 - 0.55 * duck)) + sfx * 0.9 + vo * 1.15
-rms = np.sqrt(np.mean(mix ** 2)); mix *= 10 ** (-14.5 / 20) / rms
-mix = np.tanh(mix * 1.2) / 1.2
 mix *= 0.97 / np.max(np.abs(mix))
 mix *= np.minimum(1, np.arange(N) / (SR * 0.01)) * np.minimum(1, (N - np.arange(N)) / (SR * 0.3))
-sf.write('audio/ep3.wav', mix.T.astype(np.float32), SR)
+sf.write('audio/ep3_raw.wav', mix.T.astype(np.float32), SR)
 print('ok rms', 20 * np.log10(np.sqrt(np.mean(mix ** 2))))

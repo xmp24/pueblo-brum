@@ -68,8 +68,8 @@ take(0, 0, 9);
 P('fuente', -80, 22, 0); take(-80, 22, 4);
 P('ayuntamiento', -30, 36, Math.PI / 2); take(-30, 36, 10);
 const core: [string, number, number, number][] = [
-  ['casa_a', -6, 22, Math.PI], ['casa_b', 10, 24, Math.PI], ['casa_c', -16, 20, Math.PI], ['casa_d', -32, -4, Math.PI / 2],
-  ['casa_e', -46, 14, Math.PI / 2], ['casa_f', 36, -2, -Math.PI / 2], ['casa_g', 12, -24, 0], ['casa_h', -12, -24, 0],
+  ['casa_a', -10, 24, Math.PI], ['casa_b', 10, 24, Math.PI], ['casa_c', -16, 20, Math.PI], ['casa_d', -33, -16, Math.PI / 2],
+  ['casa_e', -46, 14, Math.PI / 2], ['casa_f', 37, -15, -Math.PI / 2], ['casa_g', 12, -24, 0], ['casa_h', -12, -24, 0],
   ['tienda_pan', 38, 12, -Math.PI / 2], ['tienda_helados', 12, 38, Math.PI], ['tienda_juguetes', -14, 38, Math.PI],
   ['tienda_frutas', 52, -14, 0], ['tienda_libros', -52, -14, 0],
 ];

@@ -10,8 +10,8 @@ export type Part = {geo: THREE.BufferGeometry; mat: THREE.Material};
 export type Asset = {name: string; parts: Part[]; sub: Record<string, {parts: Part[]; m: THREE.Matrix4}[]>; node: THREE.Object3D};
 export type Lib = {assets: Record<string, Asset>; bruno: THREE.Object3D; sky: THREE.Texture};
 
-const FILES = ['edificios', 'vehiculos', 'props', 'arboles'];
-const SPLIT = /^(rueda[A-Z]{2}|puerta_enrollable)/; // subárboles animables que se separan
+const FILES = ['edificios', 'vehiculos', 'props', 'arboles', 'personajes'];
+const SPLIT = /^(rueda[A-Z]{2}|puerta_enrollable|ojosA|bocaA|escalera|pala|sirena[RB]|chimenea)/; // subárboles animables que se separan
 
 const matCache = new Map<string, THREE.Material>();
 function fixMat(m: THREE.Material, hasColor: boolean) {
@@ -21,7 +21,18 @@ function fixMat(m: THREE.Material, hasColor: boolean) {
   n.vertexColors = hasColor;
   (n as THREE.MeshStandardMaterial).envMapIntensity = 0.85;
   matCache.set(k, n);
+  const sm = n as THREE.MeshStandardMaterial;
+  sm.userData.e0 = sm.emissiveIntensity; sm.userData.ec0 = sm.emissive?.clone();
   return n;
+}
+// día (0) -> noche (1): farolas, ventanas y luces interiores
+export function applyNight(k: number) {
+  for (const m of matCache.values()) {
+    const sm = m as THREE.MeshStandardMaterial;
+    if (/^farol|^luz_taller/.test(sm.name)) sm.emissiveIntensity = sm.userData.e0 * (/^farol/.test(sm.name) ? 0.06 + 1.2 * k : 0.25 + 0.75 * k);
+    else if (/^cristal/.test(sm.name)) { sm.emissive.copy(sm.userData.ec0).lerp(new THREE.Color('#ffc36b'), k); sm.emissiveIntensity = sm.userData.e0 + k * 1.4; }
+    else if (/^faro$|^faro\+/.test(sm.name)) sm.emissiveIntensity = sm.userData.e0 * (0.6 + 1.2 * k);
+  }
 }
 
 function mergeNode(root: THREE.Object3D, skipSplit: boolean): Part[] {
@@ -79,7 +90,7 @@ export function loadLib(): Promise<Lib> {
         const inv = root.matrixWorld.clone().invert();
         root.traverse((o) => {
           if (o !== root && SPLIT.test(o.name) && !(o.parent && SPLIT.test(o.parent.name))) {
-            const kind = o.name.replace(/\.\d+$/, '').replace(/^(rueda).*/, '$1');
+            const kind = o.name.replace(/\.?\d+$/, '').replace(/^(rueda).*/, '$1');
             (sub[kind] = sub[kind] || []).push({parts: mergeNode(o, false), m: new THREE.Matrix4().multiplyMatrices(inv, o.matrixWorld)});
           }
         });

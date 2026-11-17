@@ -4,7 +4,8 @@ import * as THREE from 'three';
 import {AbsoluteFill} from 'remotion';
 import {prog, lerp, clamp, easeInOut, easeOut, easeIn, easeOutBack, damped, hash, catmull, V3} from './anim';
 import type {B2Pose} from './Bruno2';
-import {ScriptCar} from './world/World';
+import {Char} from './world/World';
+import {talkOf, blinkAt, PX} from './talk';
 import {Lib} from './world/assets';
 import {RAIL_Z, MUD} from './world/layout';
 import VO from './vo.json';
@@ -250,7 +251,7 @@ export const Min2Scene: React.FC<{lib: Lib; t: number; bp: B2Pose}> = ({lib, t, 
   const st = t > K2.sticker ? easeOutBack(clamp((t - K2.sticker) / 0.45), 3) : 0;
   return (
     <group>
-      <ScriptCar lib={lib} m="chispa" x={c.x} z={c.z} y={c.y} yaw={c.yaw} roll={c.roll} pitch={c.pitch} dist={c.dist + (t > K2.strain && t < K2.pop ? (t - K2.strain) * 6 : 0)} />
+      <Char lib={lib} m="chispa" p={{x: c.x, z: c.z, y: c.y, yaw: c.yaw, roll: c.roll, pitch: c.pitch, dist: c.dist + (t > K2.strain && t < K2.pop ? (t - K2.strain) * 6 : 0), blink: blinkAt(t, 2), talk: talkOf(PX.chispa, t)}} />
       {cableOn ? <mesh position={mid} quaternion={q}><cylinderGeometry args={[0.035, 0.035, len, 8]} /><meshStandardMaterial color="#2f3b57" roughness={0.5} metalness={0.4} /></mesh> : null}
       {[K2.strain + 0.3, K2.strain + 1.3, ...K2.tugs].map((tg, i) => <MudSplash key={i} t={t} t0={tg} c={[MUD.x - 0.6, 0.1, MUD.z + (i % 2 ? 0.9 : -0.9)]} n={10} />)}
       <MudSplash t={t} t0={K2.pop} c={[MUD.x, 0.1, MUD.z]} n={28} />

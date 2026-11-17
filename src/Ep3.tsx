@@ -16,6 +16,7 @@ import {prog, lerp, clamp, easeInOut, easeOut, easeIn, easeOutBack, damped, hash
 import {Puffs, Sparkles, Confetti, Ring, Dizzy, Zzz, Birds, Rising, Bunting, Butterflies} from './fx';
 import {zTex, stripeTex, garageTex} from './tex';
 import VO from './vo.json';
+import MK from './ep10.json';
 
 const vo = VO as Record<string, {t: number; d: number}>;
 const S = (k: string) => vo[k].t;
@@ -62,7 +63,23 @@ function boxPose(t: number): BoxPose {
 }
 
 // ---------------- Bruno ----------------
-const RED_CAR = (t: number) => ({x: lerp(30, 8, prog(t, K.m4, K.m4 + 1.4)), z: -1.5});
+const RED_CAR = (t: number) => { const r = redCarAt(t); return {x: r.x, z: r.z}; };
+const RC_PTS: [number, number][] = (() => {
+  const p: [number, number][] = [[44, -4.75], [41, -3.2], [37, -1.75], [30, -1.75], [17, -1.75]];
+  for (let k = 0; k <= 20; k++) { const a = -0.14 - (k / 20) * (Math.PI - 0.28); p.push([Math.cos(a) * 12.5, Math.sin(a) * 12.5]); }
+  p.push([-17, -1.75], [-40, -1.75], [-58, -1.75], [-61, -3.2], [-64, -4.75]);
+  return p;
+})();
+const RC_CUM = RC_PTS.reduce((a: number[], p, i) => (i ? [...a, a[i - 1] + Math.hypot(p[0] - RC_PTS[i - 1][0], p[1] - RC_PTS[i - 1][1])] : [0]), []);
+function redCarAt(t: number) {
+  const L = RC_CUM[RC_CUM.length - 1], d = t - (K.m4 - 1.8), acc = 6, v = 12, ta = v / acc, da = 0.5 * acc * ta * ta;
+  const tc = (L - 2 * da) / v;
+  const ss = d <= 0 ? 0 : d < ta ? 0.5 * acc * d * d : d < ta + tc ? da + v * (d - ta) : d < 2 * ta + tc ? L - 0.5 * acc * (2 * ta + tc - d) ** 2 : L;
+  let i = 1; while (i < RC_CUM.length - 1 && RC_CUM[i] < ss) i++;
+  const u = (ss - RC_CUM[i - 1]) / Math.max(1e-6, RC_CUM[i] - RC_CUM[i - 1]);
+  const A = RC_PTS[i - 1], B = RC_PTS[i];
+  return {x: lerp(A[0], B[0], u), z: lerp(A[1], B[1], u), yaw: Math.atan2(B[0] - A[0], B[1] - A[1]), dist: ss};
+}
 
 function brunoAt(t: number): B2Pose {
   const p: B2Pose = {x: 0, y: 0.16, z: 0, yaw: 0, eyeOpen: 1, mouth: 'smile', brow: 0, browTilt: 0};
@@ -340,11 +357,53 @@ const Overlay: React.FC<{t: number; W: number}> = ({t, W}) => {
 const BUNT: V3[] = Array.from({length: 8}, (_, i) => { const a = Math.PI / 8 + (i / 8) * Math.PI * 2; return [Math.cos(a) * 8.8, 6.0, Math.sin(a) * 8.8] as V3; });
 const brunoObstacle = (t: number): [number, number] | null => {
   if (t >= K.go - 0.5 && t <= K.stop + 1) { const b = brunoAt(t); return [b.x, b.z]; }
-  if (t > K.m4 - 0.3 && t < K.m5 + 0.3) { const r = RED_CAR(t); return [r.x, r.z]; }
+  if (t > K.m4 - 1 && t < K.m4 + 14) { const r = RED_CAR(t); return [r.x, r.z]; }
   return obstacle2(t);
 };
 let trafficReady = false;
 const IP = getInputProps() as {nopost?: boolean; noao?: boolean; t?: number};
+
+export const T3 = 115.5;
+export const garageOpenAt = (t: number) => easeOut(prog(t, K.door, K.door + 0.8));
+export const Part1Scene: React.FC<{t: number; lib: Lib}> = ({t, lib}) => {
+  const bp = brunoAt(t);
+  const MD = (MK as Record<string, number>).door;
+  const garage = garageOpenAt(t) * (t > MD + 1 ? 1 - easeInOut(prog(t, MD + 1.0, MD + 2.4)) : 1);
+  const rc = redCarAt(t);
+  const zt = zTex();
+  return (
+    <group>
+        <Bump />
+        {BUNT.map((p, i) => <Bunting key={i} t={t} a={p} b={BUNT[(i + 1) % 8]} sag={0.7} />)}
+        <Rising t={t} c={[-20.5, 6.4, -12]} n={6} bubble size={0.8} />
+        <Birds t={t} />
+        <Butterflies t={t} centers={[[-7, 0, 6], [8, 0, -6], [-8.5, 0, -5]]} />
+        <ScriptCar lib={lib} m="coche_rojo" x={rc.x} z={rc.z} yaw={rc.yaw} dist={rc.dist} />
+        {garage > 0.01 ? <mesh position={[20, 0.05 + 1.8 * garage, -7.8]} scale={[1, garage, 1]}><planeGeometry args={[4.2, 3.6]} /><meshStandardMaterial map={garageTex()} emissive="#ffffff" emissiveMap={garageTex()} emissiveIntensity={0.25 + 0.35 * garage} roughness={0.8} /></mesh> : null}
+        {t > K.door ? <pointLight position={[20, 2.6, -7.6]} color="#ffc47a" intensity={22 * garage} distance={9} decay={2} /> : null}
+        {t < T2 + 3 ? <group position={[0, 0.165, 0]}><GiftBox p={boxPose(t)} /></group> : null}
+        {t > K.lid - 0.15 && t < T3 ? <BrunoGLB lib={lib} p={bp} /> : null}
+        <Fruit t={t} />
+        <Puffs t={t} t0={K.land} c={[0, 0, 0]} r={2.4} n={16} big={1.2} />
+        <Puffs t={t} t0={K.wake + 0.62} c={[0, 0, 0.3]} r={1.4} n={10} />
+        <Puffs t={t} t0={K.rev} c={[0, 0, -1.6]} r={0.8} n={8} dur={1.1} />
+        <Puffs t={t} t0={K.go} c={[0, 0, -1]} r={1.0} n={10} />
+        <Puffs t={t} t0={K.m3 + 1.02} c={[1.2, 0, -20.4]} r={1.2} n={10} />
+        <Puffs t={t} t0={K.m5 + 0.6} c={[19.5, 0, -1.5]} r={1.2} n={12} big={1.1} />
+        <Sparkles t={t} t0={K.lid} c={[0, 3.2, 0]} n={26} spread={3.8} />
+        <Sparkles t={t} t0={K.naranja} c={[0, 1.6, 1.0]} n={24} tint="#ffb35c" spread={3} />
+        <Sparkles t={t} t0={K.m3 + 1.02} c={[1.2, 1.5, -20.4]} n={14} tint="#ffe14d" spread={2.2} />
+        <Sparkles t={t} t0={K.door + 0.2} c={[20, 2.4, -8.0]} n={20} tint="#ffe9a0" spread={3.4} />
+        <Confetti t={t} t0={K.wake + 0.05} />
+        <Zzz t={t} t0={15.3} t1={K.wake} c={[0.45, 2.5, 1.0]} tex={zt} />
+        <Dizzy t={t} t0={K.bonk} t1={K.bonk + 1.0} c={[0, 3.0, 0.75]} />
+        <Ring t={t} t0={K.naranja} c={[0, 0.17, 0]} />
+        <Ring t={t} t0={K.wake + 0.62} c={[0, 0.17, 0]} color="#ffffff" />
+        {t < T3 ? <Min2Scene lib={lib} t={t} bp={bp} /> : null}
+    </group>
+  );
+};
+export {brunoAt, camAtT, K, Overlay, popk, brunoObstacle};
 
 export const Ep3: React.FC = () => {
   const frame = useCurrentFrame();
@@ -366,33 +425,7 @@ export const Ep3: React.FC = () => {
         <Rig t={t} lib={lib} />
         <Lights t={t} />
         <World lib={lib} t={t} garageOpen={garage} />
-        <Bump />
-        {BUNT.map((p, i) => <Bunting key={i} t={t} a={p} b={BUNT[(i + 1) % 8]} sag={0.7} />)}
-        <Rising t={t} c={[-20.5, 6.4, -12]} n={6} bubble size={0.8} />
-        <Birds t={t} />
-        <Butterflies t={t} centers={[[-7, 0, 6], [8, 0, -6], [-8.5, 0, -5]]} />
-        {t > K.m4 - 0.3 && t < K.m5 + 0.3 ? <ScriptCar lib={lib} m="coche_rojo" x={rc.x} z={rc.z} yaw={-Math.PI / 2} dist={-rc.x} /> : null}
-        {garage > 0.01 ? <mesh position={[20, 0.05 + 1.8 * garage, -7.8]} scale={[1, garage, 1]}><planeGeometry args={[4.2, 3.6]} /><meshStandardMaterial map={garageTex()} emissive="#ffffff" emissiveMap={garageTex()} emissiveIntensity={0.25 + 0.35 * garage} roughness={0.8} /></mesh> : null}
-        {t > K.door ? <pointLight position={[20, 2.6, -7.6]} color="#ffc47a" intensity={22 * garage} distance={9} decay={2} /> : null}
-        <GiftBox p={boxPose(t)} />
-        {t > K.lid - 0.15 ? <BrunoGLB lib={lib} p={bp} /> : null}
-        <Fruit t={t} />
-        <Puffs t={t} t0={K.land} c={[0, 0, 0]} r={2.4} n={16} big={1.2} />
-        <Puffs t={t} t0={K.wake + 0.62} c={[0, 0, 0.3]} r={1.4} n={10} />
-        <Puffs t={t} t0={K.rev} c={[0, 0, -1.6]} r={0.8} n={8} dur={1.1} />
-        <Puffs t={t} t0={K.go} c={[0, 0, -1]} r={1.0} n={10} />
-        <Puffs t={t} t0={K.m3 + 1.02} c={[1.2, 0, -20.4]} r={1.2} n={10} />
-        <Puffs t={t} t0={K.m5 + 0.6} c={[19.5, 0, -1.5]} r={1.2} n={12} big={1.1} />
-        <Sparkles t={t} t0={K.lid} c={[0, 3.2, 0]} n={26} spread={3.8} />
-        <Sparkles t={t} t0={K.naranja} c={[0, 1.6, 1.0]} n={24} tint="#ffb35c" spread={3} />
-        <Sparkles t={t} t0={K.m3 + 1.02} c={[1.2, 1.5, -20.4]} n={14} tint="#ffe14d" spread={2.2} />
-        <Sparkles t={t} t0={K.door + 0.2} c={[20, 2.4, -8.0]} n={20} tint="#ffe9a0" spread={3.4} />
-        <Confetti t={t} t0={K.wake + 0.05} />
-        <Zzz t={t} t0={15.3} t1={K.wake} c={[0.45, 2.5, 1.0]} tex={zt} />
-        <Dizzy t={t} t0={K.bonk} t1={K.bonk + 1.0} c={[0, 3.0, 0.75]} />
-        <Ring t={t} t0={K.naranja} c={[0, 0.17, 0]} />
-        <Ring t={t} t0={K.wake + 0.62} c={[0, 0.17, 0]} color="#ffffff" />
-        <Min2Scene lib={lib} t={t} bp={bp} />
+        <Part1Scene t={t} lib={lib} />
         <Post off={!!IP.nopost} ao={!IP.noao} />
       </ThreeCanvas>
       <Overlay t={t} W={width} />

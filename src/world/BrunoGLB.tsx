@@ -17,11 +17,13 @@ function build(src: THREE.Object3D) {
   }
   // materiales propios para poder brillar
   const glowMats: THREE.MeshStandardMaterial[] = [];
+  const paintMats: THREE.MeshStandardMaterial[] = [];
   find('cuerpo').traverse((m) => {
     const mesh = m as THREE.Mesh; if (!mesh.isMesh) return;
     mesh.material = (mesh.material as THREE.MeshStandardMaterial).clone();
     const mm = mesh.material as THREE.MeshStandardMaterial;
     if (/naranja|pintura|cuerpo|Bruno/i.test(mm.name) || mm.color.r > 0.8 && mm.color.g < 0.6) glowMats.push(mm);
+    if (/^naranja/.test(mm.name)) { mm.userData.c0 = mm.color.clone(); paintMats.push(mm); }
   });
   const baliza = find('baliza') as THREE.Mesh;
   const balMats: THREE.MeshStandardMaterial[] = [];
@@ -37,7 +39,7 @@ function build(src: THREE.Object3D) {
     ceja: [find('cejaL'), find('cejaR')],
     boca: {smile: root.getObjectByName('boca_sonrisa'), open: find('boca_abierta'), o: root.getObjectByName('boca_o'), flat: root.getObjectByName('boca_plana')},
     ruedas: ['ruedaFL', 'ruedaFR', 'ruedaRL', 'ruedaRR'].map(find),
-    glowMats, balMats,
+    glowMats, balMats, paintMats,
     rest: {} as Record<string, THREE.Vector3>,
   };
   for (const k of ['brazo', 'gancho']) n.rest[k] = (n as any)[k].position.clone();
@@ -87,6 +89,14 @@ export const BrunoGLB: React.FC<{lib: Lib; p: B2Pose}> = ({lib, p}) => {
   n.upper.rotation.set(0, 0, p.bodyRoll ?? 0);
   const glow = p.glow ?? 0;
   n.glowMats.forEach((m) => { m.emissive.set('#ff9a2a'); m.emissiveIntensity = glow * 0.9; });
+  const mud = (p as any).mud ?? 0, paint = (p as any).paint as string | undefined;
+  n.paintMats.forEach((m) => {
+    const dark = /osc/.test(m.name);
+    m.color.copy(m.userData.c0);
+    if (paint) m.color.set(paint).multiplyScalar(dark ? 0.82 : 1);
+    if (mud > 0) m.color.lerp(new THREE.Color('#6b4a2b'), mud * 0.6);
+    m.roughness = 0.28 + mud * 0.5;
+  });
   const bea = p.beacon ?? 0;
   n.balMats.forEach((m) => { m.emissive.set('#ffb000'); m.emissiveIntensity = 0.2 + bea * 3; });
   return (

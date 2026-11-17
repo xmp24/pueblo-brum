@@ -114,11 +114,9 @@ def vehicle(name, kind, color):
         rbox('parachoques', S(1.56, 0.22, 0.25), P(0, 0.5, L / 2), 0.1, CH, parent=root)
         for s in (1, -1):
             sphere('faro', 0.1, P(s * 0.5, 0.72, L / 2 + 0.02), LA, parent=root, scale=(1, 0.5, 0.85))
-            sphere('mejilla', 0.5, P(s * 0.5, 1.05, L / 2 - 0.01), mat('mejilla', '#ff8f9e', 0.6), parent=root, scale=(0.18, 0.04, 0.11))
-            rbox('pestana', S(0.18, 0.04, 0.04), P(s * 0.38, 1.72, 0.66), 0.015, PU, parent=root, rot=(0, s * 0.45, 0))
-        e = empty('ojos', (0, 0, 0), root)
-        car_eyes(e, 1.4, 0.64, 0.25, 0.2)
-        torus('boca', 0.13, 0.035, P(0, 1.09, L / 2 + 0.01), mat('labio', '#5a1e0e', 0.4), parent=root, arc=180, rot=(-math.pi / 2, 0, math.pi))
+        face(root, 1.4, 0.62, sep=0.26, r=0.19, smile_y=0.86, smile_z=L / 2 - 0.02)
+        for s in (1, -1):
+            rbox('pestana', S(0.16, 0.035, 0.035), P(s * 0.4, 1.68, 0.64), 0.012, PU, parent=root, rot=(0, s * 0.45, 0))
         rr = 0.36; wz = L * 0.3
     for s in (1, -1):
         sphere('faro', 0.11, P(s * 0.55, 0.7, (L / 2 if kind not in ('van', 'mail', 'icecream') else L / 2 + 0.7) + 0.01), LA, parent=root, scale=(1, 0.5, 0.8))
@@ -423,7 +421,120 @@ def vehiculos():
                      ('chispa', 'chispa', '#3d8bff')]:
         vehicle(nm, k, c)
 
-{'vehiculos': vehiculos, 'edificios': edificios, 'props': props, 'arboles': arboles}[what]()
+# ---------------------------------------------------------------- personajes
+def face(root, y, z, sep=0.3, r=0.2, smile_y=None, panel=None, smile_z=None):
+    """Cara estándar: panel-parabrisas (opcional), ojos animables (ojosA), sonrisa fija y boca abierta (bocaA)."""
+    if panel:
+        rbox('panel', S(panel[0], panel[1], 0.08), P(0, y, z - 0.03), 0.07, mat('panelcara', '#dff3ff', 0.12, coat=1.0), parent=root)
+    oj = empty('ojosA', P(0, y, z + 0.02), root)
+    for s in (1, -1):
+        sphere('ojo', r, P(s * sep, 0, 0), WH, parent=oj, scale=(1, 0.42, 1.15), seg=28, rings=16)
+        sphere('iris', r * 0.62, P(s * sep, -0.01, r * 0.36), mat('iris', '#5a3a1e', 0.2, coat=1.0), parent=oj, scale=(1, 0.3, 1.05), seg=22, rings=12)
+        sphere('pup', r * 0.36, P(s * sep, -0.01, r * 0.42), PU, parent=oj, scale=(1, 0.3, 1.05), seg=16, rings=10)
+        sphere('bri', r * 0.14, P(s * sep + r * 0.2, r * 0.25, r * 0.47), mat('brillo', '#ffffff', 0, emit='#ffffff', emit_k=1.5), parent=oj, seg=8, rings=6)
+        rbox('ceja', S(r * 1.1, 0.07, 0.07), P(s * sep, r * 1.35, 0.02), 0.03, mat('ceja', '#5a2e14', 0.5), parent=oj, rot=(0, s * 0.2, 0))
+    sy = smile_y if smile_y is not None else y - r * 1.9
+    z0 = z; z = smile_z if smile_z is not None else z
+    torus('sonrisa', r * 0.9, r * 0.17, P(0, sy + r * 0.45, z + 0.02), mat('labio', '#5a1e0e', 0.4), parent=root, arc=180, rot=(-math.pi / 2, 0, math.pi))
+    bo = empty('bocaA', P(0, sy, z + 0.03), root)
+    sphere('hueco', r * 0.75, (0, 0, 0), mat('boca_osc', '#3a0d12', 0.6), parent=bo, scale=(1.1, 0.2, 0.75), seg=20, rings=10)
+    sphere('lengua', r * 0.45, P(0, -r * 0.3, 0.02), mat('lengua', '#ff6f7e', 0.4), parent=bo, scale=(1.1, 0.25, 0.6), seg=14, rings=8)
+    z = z0
+    for s in (1, -1):
+        sphere('mejilla', r * 0.8, P(s * (sep + r * 1.1), sy + r * 0.5, (smile_z if smile_z is not None else z) + 0.0), mat('mejilla', '#ff8f9e', 0.6), parent=root, scale=(0.5, 0.08, 0.32), seg=14, rings=8)
+
+def lola():
+    root = empty('lola'); C = paint('#ff3b30'); L = 5.6
+    rbox('chasis', S(2.0, 0.5, L), P(0, 0.75, 0), 0.15, DKG, parent=root)
+    rbox('cabina', S(2.0, 1.75, 1.7), P(0, 1.85, L / 2 - 0.95), 0.32, C, parent=root)
+    rbox('caja', S(2.0, 1.25, L - 1.9), P(0, 1.6, -0.85), 0.2, C, parent=root)
+    for side in (1, -1):
+        rbox('franja', S(0.04, 0.16, L - 0.3), P(side * 1.01, 1.25, 0), 0.03, mat('franja_bl', '#ffffff', 0.3), parent=root)
+        for i in range(3):
+            rbox('persiana', S(0.04, 0.85, 0.95), P(side * 1.01, 1.75, -2.4 + i * 1.05), 0.05, mat('persiana', '#e8edf5', 0.3, metal=0.4), parent=root)
+            for k in range(5): rbox('lama', S(0.05, 0.03, 0.9), P(side * 1.03, 1.42 + k * 0.17, -2.4 + i * 1.05), 0.01, GR, parent=root)
+    rbox('parachoques', S(2.15, 0.35, 0.3), P(0, 0.75, L / 2 + 0.05), 0.12, CH, parent=root)
+    rbox('rejilla', S(1.3, 0.35, 0.06), P(0, 1.15, L / 2 + 0.02), 0.04, CH, parent=root)
+    for s in (1, -1):
+        sphere('faro', 0.16, P(s * 0.72, 1.15, L / 2 + 0.02), LA, parent=root, scale=(1, 0.5, 1))
+    face(root, 2.25, L / 2 - 0.08, sep=0.42, r=0.26, panel=(1.8, 1.05))
+    # barra de sirenas
+    rbox('barra', S(1.4, 0.16, 0.36), P(0, 2.82, L / 2 - 0.9), 0.06, DKG, parent=root)
+    for nm, x, c in (('sirenaR', 0.4, '#ff2020'), ('sirenaB', -0.4, '#2f6bff')):
+        e = empty(nm, P(x, 2.98, L / 2 - 0.9), root)
+        rbox(nm + '_c', S(0.55, 0.22, 0.32), (0, 0, 0), 0.1, mat('sir' + c, c, 0.1, coat=1.0, emit=c, emit_k=2.5), parent=e)
+    # escalera (pivote atrás)
+    esc = empty('escalera', P(0, 2.3, -L / 2 + 0.4), root)
+    for s in (1, -1):
+        rbox('larguero', S(0.08, 0.1, 4.2), P(s * 0.38, 0.05, 2.1), 0.03, mat('escalera', '#d9e1ec', 0.25, metal=0.7), parent=esc)
+    for i in range(12):
+        cyl('pelda', 0.03, 0.76, P(0, 0.05, 0.25 + i * 0.33), mat('escalera', '#d9e1ec', 0.25, metal=0.7), parent=esc, rot=(0, math.pi / 2, 0), verts=8)
+    cyl('base_esc', 0.3, 0.25, P(0, 2.2, -L / 2 + 0.4), GR, parent=root, verts=20)
+    cyl('manguera', 0.42, 0.5, P(0, 1.9, -L / 2 - 0.05), mat('manguera', '#f2c94c', 0.5), parent=root, rot=(math.pi / 2, 0, 0), verts=24)
+    for nm, (x, z) in {'ruedaFL': (0.95, L / 2 - 1.1), 'ruedaFR': (-0.95, L / 2 - 1.1), 'ruedaRL': (0.95, -L / 2 + 1.2), 'ruedaRR': (-0.95, -L / 2 + 1.2)}.items():
+        wheel(nm, x, z, 0.5, 0.36, root)
+
+def tico():
+    root = empty('tico'); Y = paint('#ffc21a')
+    for s in (1, -1):
+        rbox('oruga', S(0.7, 0.7, 3.4), P(s * 1.05, 0.38, 0), 0.32, mat('oruga', '#3a3d48', 0.7), parent=root)
+        for i in range(10): rbox('taco', S(0.74, 0.06, 0.12), P(s * 1.05, 0.73, -1.5 + i * 0.33), 0.02, mat('taco', '#24262e', 0.8), parent=root)
+        for i in range(4): cyl('rodillo', 0.2, 0.74, P(s * 1.05, 0.38, -1.1 + i * 0.73), GR, parent=root, rot=(0, math.pi / 2, 0), verts=16)
+    rbox('plataforma', S(2.4, 0.3, 2.6), P(0, 0.9, 0), 0.1, DKG, parent=root)
+    rbox('cuerpo', S(2.3, 1.1, 2.4), P(0, 1.6, -0.35), 0.3, Y, parent=root)
+    rbox('cabina', S(1.4, 1.5, 1.45), P(-0.35, 2.75, 0.3), 0.28, Y, parent=root)
+    rbox('techo', S(1.55, 0.14, 1.6), P(-0.35, 3.55, 0.3), 0.06, DKG, parent=root)
+    rbox('contrapeso', S(2.2, 0.8, 0.6), P(0, 1.7, -1.6), 0.25, mat('contrapeso', '#3a3d48', 0.5), parent=root)
+    cyl('escape', 0.08, 0.9, P(0.7, 2.6, -1.1), CH, parent=root, verts=12)
+    face(root, 2.9, 1.04, sep=0.3, r=0.2, panel=(1.2, 0.85))
+    rbox('rayas', S(2.32, 0.18, 2.42), P(0, 1.2, -0.35), 0.04, mat('rayas', '#3a3d48', 0.5), parent=root)
+    # brazo: pluma + balancín + cazo (pivote delante a la derecha)
+    pa = empty('pala', P(0.95, 2.0, 0.9), root)
+    rbox('pluma', S(0.32, 0.38, 2.6), P(0, 0.9, 1.1), 0.12, Y, parent=pa, rot=(math.radians(35), 0, 0))
+    rbox('balancin', S(0.28, 0.32, 1.8), P(0, 1.2, 2.9), 0.1, Y, parent=pa, rot=(math.radians(-50), 0, 0))
+    cyl('piston', 0.07, 1.4, P(0, 1.1, 1.0), CH, parent=pa, rot=(math.radians(-55), 0, 0), verts=10)
+    rbox('cazo', S(0.9, 0.55, 0.6), P(0, 0.45, 3.45), 0.14, mat('cazo', '#5b6680', 0.4, metal=0.5), parent=pa)
+    for i in range(4): rbox('diente', S(0.1, 0.18, 0.1), P(-0.33 + i * 0.22, 0.12, 3.6), 0.03, CH, parent=pa)
+
+def coco():
+    root = empty('coco'); G = paint('#2fbf5a'); L = 4.4
+    rbox('chasis', S(1.8, 0.4, L), P(0, 0.75, 0), 0.12, DKG, parent=root)
+    cyl('caldera', 0.82, 2.4, P(0, 1.75, -0.3), G, parent=root, rot=(math.pi / 2, 0, 0), verts=40, bevel=0.1)
+    for i in range(3): torus('aro', 0.84, 0.05, P(0, 1.75, -1.2 + i * 0.9), mat('aro', '#ffd23f', 0.3, metal=0.5), parent=root, rot=(math.pi / 2, 0, 0))
+    rbox('cabina', S(1.8, 2.2, 1.5), P(0, 2.0, L / 2 - 0.75), 0.3, G, parent=root)
+    rbox('techo', S(2.05, 0.18, 1.8), P(0, 3.15, L / 2 - 0.75), 0.08, mat('techo_coco', '#c0392b', 0.4), parent=root)
+    face(root, 2.15, L / 2 + 0.01, sep=0.38, r=0.24, panel=(1.55, 1.0))
+    e = empty('chimenea', P(0, 2.55, -1.3), root)
+    cyl('chim', 0.24, 0.9, P(0, 0.45, 0), DKG, parent=e, rad2=0.38, verts=24)
+    cyl('chim_top', 0.42, 0.14, P(0, 0.95, 0), mat('aro', '#ffd23f', 0.3, metal=0.5), parent=e, verts=24)
+    cyl('campana', 0.22, 0.4, P(0, 2.75, -0.1), mat('aro', '#ffd23f', 0.3, metal=0.5), parent=root, verts=20)
+    rbox('quitapiedras', S(1.7, 0.5, 0.5), P(0, 0.45, L / 2 + 0.25), 0.1, mat('rojo_q', '#ff3b30', 0.4), parent=root, rot=(math.radians(-25), 0, 0))
+    sphere('faro', 0.2, P(0, 1.35, L / 2 + 0.08), LA, parent=root, scale=(1, 0.5, 1))
+    for nm, (x, z, r) in {'ruedaFL': (0.72, L / 2 - 0.8, 0.45), 'ruedaFR': (-0.72, L / 2 - 0.8, 0.45), 'ruedaRL': (0.72, -L / 2 + 0.8, 0.55), 'ruedaRR': (-0.72, -L / 2 + 0.8, 0.55)}.items():
+        wheel(nm, x, z, r, 0.2, root, '#ff3b30')
+    for k, (nm, col) in enumerate((('vagon_a', '#ffd23f'), ('vagon_b', '#3d8bff'))):
+        v = empty(nm)
+        rbox('base', S(1.8, 0.35, 3.4), P(0, 0.7, 0), 0.1, DKG, parent=v)
+        rbox('caja', S(1.8, 1.2, 3.2), P(0, 1.45, 0), 0.22, paint(col), parent=v)
+        rbox('borde', S(1.86, 0.14, 3.26), P(0, 2.08, 0), 0.05, WH, parent=v)
+        for i in range(3):
+            rbox('regalo', S(0.7, 0.6, 0.7), P(-0.3 + (i % 2) * 0.55, 2.35, -1.0 + i * 0.95), 0.08, paint(['#ff5f9a', '#39c47a', '#c56bff'][i]), parent=v)
+            rbox('lazo', S(0.72, 0.62, 0.12), P(-0.3 + (i % 2) * 0.55, 2.36, -1.0 + i * 0.95), 0.03, mat('lazo', '#fff1a8', 0.3), parent=v)
+        for nm2, (x, z) in {'ruedaFL': (0.72, 1.0), 'ruedaFR': (-0.72, 1.0), 'ruedaRL': (0.72, -1.0), 'ruedaRR': (-0.72, -1.0)}.items():
+            wheel(nm2, x, z, 0.38, 0.18, v, '#ff3b30')
+
+def globos():
+    for nm, c in (('globo_rojo', '#ff3b3b'), ('globo_azul', '#3d8bff'), ('globo_amarillo', '#ffd23f'), ('globo_verde', '#39c47a'), ('globo_rosa', '#ff7ad1')):
+        e = empty(nm)
+        sphere('globo', 0.42, P(0, 2.2, 0), mat('gl' + c, c, 0.12, coat=1.0), parent=e, scale=(1, 1, 1.18), seg=28, rings=18)
+        cyl('nudo', 0.06, 0.12, P(0, 1.68, 0), mat('gl' + c, c, 0.12, coat=1.0), parent=e, rad2=0.02, verts=10)
+        cyl('hilo', 0.008, 1.65, P(0, 0.82, 0), mat('hilo', '#ffffff', 0.5), parent=e, verts=6)
+        sphere('brillo_g', 0.08, P(0.15, 2.45, 0.32), mat('brillo', '#ffffff', 0, emit='#ffffff', emit_k=1.5), parent=e, seg=8, rings=6)
+
+def personajes():
+    lola(); tico(); coco(); globos()
+
+{'personajes': personajes, 'vehiculos': vehiculos, 'edificios': edificios, 'props': props, 'arboles': arboles}[what]()
 meshes = [o for o in bpy.context.scene.objects if o.type == 'MESH']
 def bake_roots(samples=16, lo=0.45):
     sc = bpy.context.scene
