@@ -463,16 +463,16 @@ function vcam10(t: number): Cam | null {
   const g = M.go, fin = M.finish;
   if (t < M.race0 - 0.5 || t > S('n36') + 0.5) return null;
   if (t < g + 0.3) {
-    if (t < S('t5')) return F([-45.5, 1.8, 0.8], [-52, 1.3, 0], 46);
+    if (t < S('t5')) return F([-60, 1.8, 0.8], [-52, 1.3, 0], 46);
     if (t < S('n57')) return null;
-    const u = prog(t, S('n57'), g + 0.3); return F(mix3([-46, 1.5, 0.5], [-47, 1.4, 0.4], u), [-52, 1.2, 0], 44);
+    const u = prog(t, S('n57'), g + 0.3); return F(mix3([-59, 1.5, 0.5], [-58, 1.4, 0.4], u), [-52, 1.2, 0], 44);
   }
   if (t < fin - 0.9) {
     const b = bruno10(t); const k = Math.floor((t - g) / 3.2) % 3;
     const fx = Math.sin(b.yaw), fz = Math.cos(b.yaw), rx = Math.cos(b.yaw), rz = -Math.sin(b.yaw);
     const y = (b.lift ?? 0);
     if (k === 0) return F([b.x + fx * 8, 1.9 + y, b.z + fz * 8], [b.x, 1.2 + y, b.z], 44);
-    if (k === 1) return F([b.x + rx * 4.2 + fx * 2.5, 1.1 + y, b.z + rz * 4.2 + fz * 2.5], [b.x + fx * 0.5, 1.1 + y, b.z + fz * 0.5], 46);
+    if (k === 1) return F([b.x + fx * 11 + rx * 1.0, 5.0 + y, b.z + fz * 11 + rz * 1.0], [b.x, 1.0 + y, b.z], 42);
     return F([b.x - fx * 9, 4.8 + y, b.z - fz * 9], [b.x + fx * 3, 1.0 + y, b.z + fz * 3], 48);
   }
   if (t < S('n36')) return F([FINISH_X - 15, 2.0, 1.0], [FINISH_X + 1, 1.3, 0], 40);
