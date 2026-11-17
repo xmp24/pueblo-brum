@@ -501,7 +501,8 @@ function shots(): Shot[] {
   // G · ¿Qué suena?
   add(M.party1, M.dong + 1.6, (u, t) => { const b = B(t); return F(mix3([b.x + 5, 2.2, b.z - 1.5], [b.x + 4.6, 2.2, b.z - 1.8], u), [lerp(b.x, G[0], 0.6), 1.6, lerp(b.z, G[1], 0.6)], 42); });
   add(M.dong + 1.6, M.q0snd, (u) => F(mix3([G[0] - 10, 5, G[1] + 9], [G[0] - 9, 4.6, G[1] + 8], u), [G[0], 1, G[1] - 2], 48));
-  const qcam: [V3, V3][] = [[[LOLA_D.x - 5, 3, LOLA_D.z + 4], [G[0] - 1, 1.5, G[1] - 2]], [[TICO_D.x + 4, 3, TICO_D.z + 6], [TICO_D.x - 1, 1.6, TICO_D.z + 1]], [[CH_D.x - 3.4, 1.1, CH_D.z + 2.3], [CH_D.x, 0.9, CH_D.z]], [[G[0] - 2.6, 1.1, G[1] + 2.6], [G[0], 1.0, G[1]]]];
+  const front = (x: number, z: number, tx: number, tz: number, d: number, h: number, side: number): V3 => { const a = Math.atan2(tx - x, tz - z); return [x + Math.sin(a) * d + Math.cos(a) * side, h, z + Math.cos(a) * d - Math.sin(a) * side]; };
+  const qcam: [V3, V3][] = [[front(LOLA_D.x, LOLA_D.z, G[0], G[1], 7, 3.0, 1.5), [LOLA_D.x, 2.0, LOLA_D.z]], [front(TICO_D.x, TICO_D.z, DIG[0], DIG[1], 7, 3.2, -1.5), [TICO_D.x, 2.0, TICO_D.z]], [front(CH_D.x, CH_D.z, G[0], G[1], 3.6, 1.1, 0.6), [CH_D.x, 0.9, CH_D.z]], [[G[0] - 2.6, 1.1, G[1] + 2.6], [G[0], 1.0, G[1]]]];
   for (let q = 0; q < 4; q++) {
     add(M[`q${q}snd`] - 2.6, M[`q${q}rev`], (u) => F(mix3([G[0] - 11, 6.5, G[1] + 11], [G[0] - 10, 6, G[1] + 10], u), [G[0], 1, G[1] - 2], 48));
     const nxt = q < 3 ? M[`q${q + 1}snd`] - 2.6 : S('o2');
@@ -556,6 +557,8 @@ function vshots(): Shot[] {
   const mid: V3 = [lerp(TICO_D.x, DIG[0], 0.5), 1.3, lerp(TICO_D.z, DIG[1], 0.5)];
   add(S('n4'), S('n5'), (u, t) => { const b = brunoC2(t); const dx = Math.sin(b.yaw), dz = Math.cos(b.yaw); return F([b.x + dx * 5.2 - dz * 0.6, 1.7, b.z + dz * 5.2 + dx * 0.6], [b.x, 1.5, b.z], 40); });
   add(S('n5'), E('n6') + 0.6, (u) => F(mix3([mid[0] + 6.2, 3.4, mid[2] + 8.6], [mid[0] + 5.8, 3.2, mid[2] + 8.0], u), mid, 42));
+  for (let q = 0; q < 4; q++) add(M[`q${q}snd`] - 2.6, M[`q${q}rev`], (u) => F(mix3([G[0] - 1.5, 3.0, G[1] + 8.5], [G[0] - 1.3, 2.8, G[1] + 7.8], u), [G[0] - 1.2, 1.3, G[1] - 1.5], 44));
+  add(M.dong + 1.6, M.q0snd - 2.6, (u) => F(mix3([G[0] - 1.5, 3.0, G[1] + 8.5], [G[0] - 1.3, 2.8, G[1] + 7.8], u), [G[0] - 1.2, 1.3, G[1] - 1.5], 44));
   return v;
 }
 let SH: Shot[] | null = null, VSH: Shot[] | null = null;
