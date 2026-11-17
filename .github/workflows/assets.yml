@@ -11,16 +11,23 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - run: |
-          mkdir -p out/kits out/hdri
-          for k in car-kit city-kit-suburban city-kit-roads city-kit-commercial nature-kit toy-car-kit city-kit-industrial; do
-            u=$(curl -sL -A "Mozilla/5.0" https://kenney.nl/assets/$k | grep -o "https://kenney.nl/media/pages/assets/$k/[^\"']*\.zip" | head -1)
+          mkdir -p out/kits out/hdri out/starter
+          for k in car-kit city-kit-suburban city-kit-roads city-kit-commercial nature-kit toy-car-kit city-kit-industrial furniture-kit; do
+            html=$(curl -sL -A "Mozilla/5.0" https://kenney.nl/assets/$k)
+            u=$(echo "$html" | grep -oE '(https://kenney\.nl)?/[^"'"'"' ]*\.zip' | head -1)
+            [ -n "$u" ] && [[ "$u" != http* ]] && u="https://kenney.nl$u"
             echo "$k -> $u"
-            [ -n "$u" ] && curl -sL -A "Mozilla/5.0" -o /tmp/$k.zip "$u" && mkdir -p /tmp/k/$k && unzip -q -o /tmp/$k.zip -d /tmp/k/$k || echo "FALLO $k"
-            # quedarse solo con GLB y texturas
-            if [ -d /tmp/k/$k ]; then mkdir -p out/kits/$k; find /tmp/k/$k -iname "*.glb" -exec cp {} out/kits/$k/ \; ; find /tmp/k/$k -ipath "*glb*" -iname "*.png" -exec cp {} out/kits/$k/ \; ; cp /tmp/k/$k/License.txt out/kits/$k/ 2>/dev/null || true; ls out/kits/$k | wc -l; fi
+            if [ -n "$u" ] && curl -sfL -A "Mozilla/5.0" -o /tmp/$k.zip "$u"; then
+              mkdir -p /tmp/k/$k out/kits/$k && unzip -q -o /tmp/$k.zip -d /tmp/k/$k
+              find /tmp/k/$k -iname "*.glb" -exec cp {} out/kits/$k/ \;
+              find /tmp/k/$k -iname "*.png" -path "*Textures*" -exec cp {} out/kits/$k/ \; 2>/dev/null || true
+              find /tmp/k/$k -iname "colormap*.png" -exec cp {} out/kits/$k/ \; 2>/dev/null || true
+              cp /tmp/k/$k/License.txt out/kits/$k/ 2>/dev/null || true
+              echo "  $(ls out/kits/$k | grep -ci glb) glb"
+            else echo "FALLO $k"; echo "$html" | grep -oE '[^"]{0,60}\.zip[^"]{0,20}' | head -3; fi
           done
-          for h in kloofendal_48d_partly_cloudy_puresky qwantani_puresky; do
-            curl -sfL -o out/hdri/$h.hdr "https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/1k/${h}_1k.hdr" && echo "OK $h" || echo "FALLO $h"
+          for r in Starter-Kit-City-Builder Starter-Kit-Racing; do
+            git clone -q --depth 1 https://github.com/KenneyNL/$r /tmp/$r && mkdir -p out/starter/$r && (cd /tmp/$r && find . -iname "*.glb" -o -iname "*.png" -path "*models*" | head -400 | while read f; do mkdir -p "$GITHUB_WORKSPACE/out/starter/$r/$(dirname "$f")"; cp "$f" "$GITHUB_WORKSPACE/out/starter/$r/$f"; done) && echo "OK $r $(find out/starter/$r -iname '*.glb' | wc -l) glb" || echo "FALLO $r"
           done
           du -sh out/*
       - run: |
