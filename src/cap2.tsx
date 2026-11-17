@@ -549,9 +549,19 @@ function shots(): Shot[] {
   add(S('b18'), 605, (u, t) => { const b = B(t); return F([3.9, 1.6, 3.6], [b.x, 1.5, b.z], 42 - 6 * u); });
   return sh;
 }
-let SH: Shot[] | null = null;
-function camAt2(te: number, t: number): Cam {
-  SH = SH ?? shots();
+// planos alternativos para el formato vertical (shorts)
+function vshots(): Shot[] {
+  const v: Shot[] = [];
+  const add = (t0: number, t1: number, f: (u: number, t: number) => Cam) => { if (t1 > t0) v.push({t0, t1, f}); };
+  const mid: V3 = [lerp(TICO_D.x, DIG[0], 0.5), 1.3, lerp(TICO_D.z, DIG[1], 0.5)];
+  add(S('n4'), S('n5'), (u, t) => { const b = brunoC2(t); const dx = Math.sin(b.yaw), dz = Math.cos(b.yaw); return F([b.x + dx * 5.2 - dz * 0.6, 1.7, b.z + dz * 5.2 + dx * 0.6], [b.x, 1.5, b.z], 40); });
+  add(S('n5'), E('n6') + 0.6, (u) => F(mix3([mid[0] + 6.2, 3.4, mid[2] + 8.6], [mid[0] + 5.8, 3.2, mid[2] + 8.0], u), mid, 42));
+  return v;
+}
+let SH: Shot[] | null = null, VSH: Shot[] | null = null;
+function camAt2(te: number, t: number, vert = false): Cam {
+  SH = SH ?? shots(); VSH = VSH ?? vshots();
+  if (vert) { const vs = VSH.find((x) => t >= x.t0 && t < x.t1); if (vs) return vs.f(clamp((t - vs.t0) / Math.max(1e-3, vs.t1 - vs.t0)), t); }
   const tt = t >= S('n35') && t < E('n35') ? te : t; // en el repaso las tomas usan el tiempo remapeado
   const s = [...SH].reverse().find((x) => tt >= x.t0 && tt < x.t1) ?? SH[0];
   const c = s.f(clamp((tt - s.t0) / Math.max(1e-3, s.t1 - s.t0)), tt);
@@ -778,7 +788,7 @@ const Overlay2: React.FC<{t: number; W: number; vert: boolean}> = ({t, W, vert})
     <div style={{position: 'absolute', left: x * u, top: y * u, transform: `translate(-50%,-50%) scale(${k}) rotate(${rot + Math.sin(t * 9) * 2}deg)`, fontFamily: font, fontSize: size * u, color: col, ...st('#ffffff', 22), textShadow: `0 ${10 * u}px 0 rgba(40,20,60,0.35)`, whiteSpace: 'nowrap'}}>{txt}</div>
   ) : null;
   const name = (k: number, txt: string, col: string) => k > 0.01 ? (
-    <div style={{position: 'absolute', left: 70 * u, bottom: 90 * u, transform: `translateX(${(1 - k) * -700 * u}px) rotate(-3deg)`, background: col, borderRadius: 30 * u, padding: `${10 * u}px ${46 * u}px`, fontFamily: font, fontSize: 110 * u, color: '#fff', boxShadow: `0 ${10 * u}px 0 rgba(0,0,0,0.2)`, border: `${8 * u}px solid #fff`}}>{txt}</div>
+    <div style={{position: 'absolute', left: (vert ? 220 : 70) * u, bottom: (vert ? 420 : 90) * u, transform: `translateX(${(1 - k) * -700 * u}px) rotate(-3deg)`, background: col, borderRadius: 30 * u, padding: `${10 * u}px ${46 * u}px`, fontFamily: font, fontSize: 110 * u, color: '#fff', boxShadow: `0 ${10 * u}px 0 rgba(0,0,0,0.2)`, border: `${8 * u}px solid #fff`}}>{txt}</div>
   ) : null;
   const title = (a: number, b: number, txt: string, sub: string, col: string) => { const k = popk(t, a, b); return k > 0.01 ? (
     <AbsoluteFill style={{alignItems: 'center', justifyContent: 'center'}}>
@@ -968,7 +978,7 @@ export const Cap2: React.FC<{t0?: number}> = ({t0 = 0}) => {
   const lib = useLib();
   if (!ready || !lib) return null;
   if (!trafficReady2) { resolve(obstacle2); trafficReady2 = true; }
-  const c = camAt2(te, t);
+  const c = camAt2(te, t, vert);
   const garage = easeOut(prog(te, M.exit0 - 1.2, M.exit0 - 0.2)) * (1 - easeInOut(prog(te, M.exit0 + 3.5, M.exit0 + 5)));
   return (
     <AbsoluteFill style={{background: '#a9dcff'}}>
