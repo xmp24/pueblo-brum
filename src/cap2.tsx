@@ -784,9 +784,9 @@ const popk = (t: number, a: number, b: number, inD = 0.25, outD = 0.2) => easeOu
 const Overlay2: React.FC<{t: number; W: number; vert: boolean}> = ({t, W, vert}) => {
   const u = W / 1920;
   const st = (c: string, px: number) => ({WebkitTextStroke: `${px * u}px ${c}`, paintOrder: 'stroke fill' as any});
-  const burst = (k: number, txt: string, col: string, x: number, y: number, size: number, rot = -6) => k > 0.01 ? (
-    <div style={{position: 'absolute', left: x * u, top: y * u, transform: `translate(-50%,-50%) scale(${k}) rotate(${rot + Math.sin(t * 9) * 2}deg)`, fontFamily: font, fontSize: size * u, color: col, ...st('#ffffff', 22), textShadow: `0 ${10 * u}px 0 rgba(40,20,60,0.35)`, whiteSpace: 'nowrap'}}>{txt}</div>
-  ) : null;
+  const burst = (k: number, txt: string, col: string, x: number, y: number, size0: number, rot = -6) => { const size = vert ? Math.min(size0, 1250 / (txt.length * 0.6)) : size0; return k > 0.01 ? (
+    <div style={{position: 'absolute', left: (vert ? clamp(x, 300, 1620) : x) * u, top: y * u, transform: `translate(-50%,-50%) scale(${k}) rotate(${rot + Math.sin(t * 9) * 2}deg)`, fontFamily: font, fontSize: size * u, color: col, ...st('#ffffff', 22), textShadow: `0 ${10 * u}px 0 rgba(40,20,60,0.35)`, whiteSpace: 'nowrap'}}>{txt}</div>
+  ) : null; };
   const name = (k: number, txt: string, col: string) => k > 0.01 ? (
     <div style={{position: 'absolute', left: (vert ? 220 : 70) * u, bottom: (vert ? 420 : 90) * u, transform: `translateX(${(1 - k) * -700 * u}px) rotate(-3deg)`, background: col, borderRadius: 30 * u, padding: `${10 * u}px ${46 * u}px`, fontFamily: font, fontSize: 110 * u, color: '#fff', boxShadow: `0 ${10 * u}px 0 rgba(0,0,0,0.2)`, border: `${8 * u}px solid #fff`}}>{txt}</div>
   ) : null;
