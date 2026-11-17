@@ -1,0 +1,4 @@
+node_modules
+build
+*.wav
+*.mp4
