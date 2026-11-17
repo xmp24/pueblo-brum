@@ -469,7 +469,7 @@ function shots(): Shot[] {
       add(S(line) - 0.3, next, (u) => F(mix3([COCO_STOP - 7, 2.4, RAIL_Z - 5], [COCO_STOP - 6.4, 2.4, RAIL_Z - 4.6], u), [COCO_STOP, 2.3, RAIL_Z], 40));
     } else {
       add(M[inn], S(line) - 0.3, (u, t) => { const c = chispaC2(t)!; return follow(c.x, c.z, c.yaw, -6, 1.5, 1.2, 0, 0.9, 46); });
-      add(S(line) - 0.3, next, (u) => F(mix3([CH_D.x - 3.8, 1.2, CH_D.z + 2.2], [CH_D.x - 3.4, 1.2, CH_D.z + 2.0], u), [CH_D.x, 0.9, CH_D.z], 38));
+      { const cfx = Math.sin(CH_D.yaw), cfz = Math.cos(CH_D.yaw); add(S(line) - 0.3, next, (u) => F(mix3([CH_D.x + cfx * 4.0 + cfz * 0.8, 1.3, CH_D.z + cfz * 4.0 - cfx * 0.8], [CH_D.x + cfx * 3.6 + cfz * 0.7, 1.25, CH_D.z + cfz * 3.6 - cfx * 0.7], u), [CH_D.x, 0.9, CH_D.z], 40)); }
     }
   });
   add(S('b8'), M.spray0, (u) => F(mix3([DIG[0] - 3, 6, DIG[1] + 13], [DIG[0] - 2, 5, DIG[1] + 12], u), [DIG[0] - 2, 1, DIG[1] - 1], 48));
@@ -477,7 +477,7 @@ function shots(): Shot[] {
   add(M.spray0, S('n17'), (u) => F([LOLA_D.x - 6, 3.8, LOLA_D.z + 3], [DIG[0] - 1, 1.5, DIG[1] - 1], 44));
   add(S('n17'), M.spray1, (u) => F(mix3([DIG[0] - 3.2, 2.2, DIG[1] + 2.6], [DIG[0] - 2.8, 1.9, DIG[1] + 2.2], u), [DIG[0], 0.2, DIG[1]], 40));
   add(M.spray1, S('x2'), (u) => F([TICO_D.x + 4, 3.2, TICO_D.z + 6], [DIG[0] + 1.5, 1.2, DIG[1] - 1], 42));
-  add(S('x2'), S('n18'), (u) => F(mix3([CH_D.x - 3.6, 1.1, CH_D.z + 2.4], [CH_D.x - 3.2, 1.1, CH_D.z + 2.2], u), [CH_D.x, 0.9, CH_D.z], 38));
+  { const cfx = Math.sin(CH_D.yaw), cfz = Math.cos(CH_D.yaw); add(S('x2'), S('n18'), (u) => F(mix3([CH_D.x + cfx * 3.8 - cfz * 0.8, 1.2, CH_D.z + cfz * 3.8 + cfx * 0.8], [CH_D.x + cfx * 3.4 - cfz * 0.7, 1.2, CH_D.z + cfz * 3.4 + cfx * 0.7], u), [CH_D.x, 0.9, CH_D.z], 40)); }
   add(S('n18'), M.one - 0.3, (u) => F(mix3([DIG[0] - 12, 5, DIG[1] + 10], [DIG[0] - 10, 4, DIG[1] + 8], u), [DIG[0], 1.2, DIG[1] + 1], 46));
   add(M.one - 0.3, M.lift0, (u, t) => { const b = B(t); return F(mix3([b.x - 0.6, 1.5, b.z + 4.6], [b.x - 0.5, 1.45, b.z + 3.9], u), [b.x, 1.5, b.z], 38); });
   add(M.lift0, M.lift0 + 3.2, (u) => F(mix3([DIG[0] + 4.5, 0.4, DIG[1] + 3.5], [DIG[0] + 4.0, 0.6, DIG[1] + 3.0], u), [DIG[0], 1.4 + 1.2 * u, DIG[1]], 46));

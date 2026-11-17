@@ -7,6 +7,7 @@ on:
       frames: {required: true}
       jobs: {default: '120'}
       tag: {required: true}
+      only: {default: ''}
 permissions:
   contents: write
 jobs:
@@ -35,6 +36,7 @@ jobs:
           set -e
           PER=$(( (TOTAL + N - 1) / N )); S=$(( I * PER )); E=$(( S + PER - 1 )); [ $E -ge $TOTAL ] && E=$(( TOTAL - 1 ))
           if [ $I -ge $N ] || [ $S -ge $TOTAL ]; then echo "sin trabajo"; exit 0; fi
+          ONLY="${{ inputs.only }}"; if [ -n "$ONLY" ] && ! echo ",$ONLY," | grep -q ",$I,"; then echo "no pedido"; exit 0; fi
           ok=0
           for try in 1 2 3; do
             if npx remotion render build $COMP seg.mp4 --frames=$S-$E --muted --gl=swangle --concurrency=4 --crf=16 --x264-preset=veryfast --jpeg-quality=94 --log=error --timeout=300000; then
@@ -50,7 +52,9 @@ jobs:
           rm -f k.txt seg.mp4; mkdir -p /tmp/out && mv seg.bin k.enc /tmp/out/ && echo "$S $E" > /tmp/out/range.txt
       - name: Push
         if: ${{ matrix.i < fromJSON(inputs.jobs) }}
-        working-directory: /tmp/out
+        working-directory: /tmp
         run: |
+          [ -d /tmp/out ] || exit 0
+          cd /tmp/out
           git init -q -b out && git add -A && git -c user.name=atlas -c user.email=atlas@users.noreply.github.com commit -qm "seg ${{ matrix.i }}"
           for t in 1 2 3 4 5 6 7 8 9 10; do git push -f "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}" out:refs/heads/out-${{ inputs.tag }}-${{ matrix.i }} && exit 0; sleep $(( 5 + RANDOM % 15 + t * 4 )); done; exit 1
