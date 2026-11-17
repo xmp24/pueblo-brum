@@ -115,10 +115,10 @@ def vehicle(name, kind, color):
         for s in (1, -1):
             sphere('faro', 0.1, P(s * 0.5, 0.72, L / 2 + 0.02), LA, parent=root, scale=(1, 0.5, 0.85))
             sphere('mejilla', 0.5, P(s * 0.5, 1.05, L / 2 - 0.01), mat('mejilla', '#ff8f9e', 0.6), parent=root, scale=(0.18, 0.04, 0.11))
-            rbox('pestana', S(0.18, 0.04, 0.04), P(s * 0.38, 1.72, 0.66), 0.015, PU, parent=root, rot=(0, -s * 0.5, 0))
+            rbox('pestana', S(0.18, 0.04, 0.04), P(s * 0.38, 1.72, 0.66), 0.015, PU, parent=root, rot=(0, s * 0.45, 0))
         e = empty('ojos', (0, 0, 0), root)
         car_eyes(e, 1.4, 0.64, 0.25, 0.2)
-        torus('boca', 0.13, 0.035, P(0, 0.98, L / 2 + 0.01), mat('labio', '#5a1e0e', 0.4), parent=root, arc=180, rot=(math.pi / 2, 0, math.pi))
+        torus('boca', 0.13, 0.035, P(0, 1.09, L / 2 + 0.01), mat('labio', '#5a1e0e', 0.4), parent=root, arc=180, rot=(-math.pi / 2, 0, math.pi))
         rr = 0.36; wz = L * 0.3
     for s in (1, -1):
         sphere('faro', 0.11, P(s * 0.55, 0.7, (L / 2 if kind not in ('van', 'mail', 'icecream') else L / 2 + 0.7) + 0.01), LA, parent=root, scale=(1, 0.5, 0.8))

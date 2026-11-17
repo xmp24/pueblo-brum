@@ -2,6 +2,7 @@
 import sys, math
 sys.path.insert(0, '/home/claude/pueblo-brum/blender')
 from lib import *
+import lib as _L; _L.SEG_HI = True
 
 def P(x, y, z):  # three -> blender
     return (x, -z, y)
@@ -126,7 +127,7 @@ for nm, s in (('ojoL', 1), ('ojoR', -1)):
 
 # bocas (cada forma es un objeto; three muestra una)
 mo = empty('boca', P(0, 1.08, 1.43), root)
-torus('boca_sonrisa', 0.22, 0.05, (0, 0, 0), LI, parent=mo, arc=180, rot=(math.pi / 2, 0, math.pi))
+torus('boca_sonrisa', 0.22, 0.05, (0, 0, 0.13), LI, parent=mo, arc=180, rot=(-math.pi / 2, 0, math.pi))
 ab = empty('boca_abierta', (0, 0, 0), mo)
 sphere('boca_hueco', 0.5, P(0, -0.02, 0), MO, parent=ab, scale=(0.25, 0.04, 0.17))
 sphere('boca_lengua', 0.5, P(0, -0.1, 0.01), TO, parent=ab, scale=(0.12, 0.03, 0.05))
