@@ -458,6 +458,26 @@ function shots(): Shot[] {
   add(S('n42'), 605, (u) => F(mix3([108, 6, -106], [110, 2.2, -110], easeIn(u)), [110, -1, -112], 40 - 12 * u));
   return sh;
 }
+// cámaras propias para el formato vertical (shorts): la carrera centrada en Bruno
+function vcam10(t: number): Cam | null {
+  const g = M.go, fin = M.finish;
+  if (t < M.race0 - 0.5 || t > S('n36') + 0.5) return null;
+  if (t < g + 0.3) {
+    if (t < S('t5')) return F([-45.5, 1.8, 0.8], [-52, 1.3, 0], 46);
+    if (t < S('n57')) return null;
+    const u = prog(t, S('n57'), g + 0.3); return F(mix3([-46, 1.5, 0.5], [-47, 1.4, 0.4], u), [-52, 1.2, 0], 44);
+  }
+  if (t < fin - 0.9) {
+    const b = bruno10(t); const k = Math.floor((t - g) / 3.2) % 3;
+    const fx = Math.sin(b.yaw), fz = Math.cos(b.yaw), rx = Math.cos(b.yaw), rz = -Math.sin(b.yaw);
+    const y = (b.lift ?? 0);
+    if (k === 0) return F([b.x + fx * 8, 1.9 + y, b.z + fz * 8], [b.x, 1.2 + y, b.z], 44);
+    if (k === 1) return F([b.x + rx * 4.2 + fx * 2.5, 1.1 + y, b.z + rz * 4.2 + fz * 2.5], [b.x + fx * 0.5, 1.1 + y, b.z + fz * 0.5], 46);
+    return F([b.x - fx * 9, 4.8 + y, b.z - fz * 9], [b.x + fx * 3, 1.0 + y, b.z + fz * 3], 48);
+  }
+  if (t < S('n36')) return F([FINISH_X - 15, 2.0, 1.0], [FINISH_X + 1, 1.3, 0], 40);
+  return null;
+}
 let SHOTS10: Shot[] | null = null;
 function cam10(t: number): Cam {
   if (t < T3) return camAtT(t);
@@ -475,7 +495,8 @@ function cam10(t: number): Cam {
 export const VFOV = (fov: number, vert: boolean) => (vert ? (2 * Math.atan(Math.tan((fov * Math.PI) / 360) * 1.75) * 180) / Math.PI : fov);
 const Rig: React.FC<{te: number; lib: Lib; vert?: boolean}> = ({te, lib, vert = false}) => {
   const {camera, scene} = useThree();
-  const c = cam10(te);
+  const c0 = cam10(te);
+  const c = vert ? (vcam10(te) ?? c0) : c0;
   camera.position.set(...c.pos); camera.lookAt(...c.at);
   const pc = camera as THREE.PerspectiveCamera; pc.fov = VFOV(c.fov, vert); pc.near = 0.1; pc.far = 1400; pc.updateProjectionMatrix();
   const nk = nightK(te), dawn = 1 - prog(te, 0, 5);
