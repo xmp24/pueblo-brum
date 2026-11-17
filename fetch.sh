@@ -15,8 +15,8 @@ for d in $(ls -d seg-* | sort -t- -k2 -n); do
 done
 tot=0; for f in seg-*.mp4; do n=$(ffprobe -v error -count_packets -select_streams v -show_entries stream=nb_read_packets -of csv=p=0 $f); tot=$((tot+n)); done
 [ $tot = $TOTAL ] || { echo "QA FALLO: $tot de $TOTAL"; exit 1; }
-DUR=$(python3 -c "print($TOTAL/30)")
-ffmpeg -v error -y -f concat -safe 0 -i list.txt -i $AUDIO -map 0:v -map 1:a -c:v libx264 -preset slow -crf 18 -pix_fmt yuv420p -c:a aac -b:a 192k -t $DUR -movflags +faststart $OUT
+FPS=${5:-60}; DUR=$(python3 -c "print($TOTAL/$FPS)")
+ffmpeg -v error -y -f concat -safe 0 -i list.txt -i $AUDIO -map 0:v -map 1:a -c:v copy -c:a aac -b:a 192k -t $DUR -movflags +faststart $OUT
 n=$(ffprobe -v error -count_packets -select_streams v -show_entries stream=nb_read_packets -of csv=p=0 $OUT)
 [ $n = $TOTAL ] || { echo "QA FALLO final $n"; exit 1; }
 echo "QA OK $OUT $n fotogramas"
