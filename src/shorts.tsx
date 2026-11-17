@@ -55,4 +55,8 @@ export const SHORTS: ShortSpec[] = [
   {id: 'ShortC1Colores', ep: 1, t0: 175.3, dur: 50.5, hook: '¡CAMBIA DE COLOR!', ask: '¿Qué color te gustó más?', col: '#3d8bff'},
   {id: 'ShortC1Suena', ep: 1, t0: 365.2, dur: 39.5, hook: '¿QUÉ SUENA?', hook2: '¡Adivina!', ask: '¿Adivinaste todos los sonidos?', col: '#c56bff'},
   {id: 'ShortC1Carrera', ep: 1, t0: 413.0, dur: 55.0, hook: '¡LA GRAN CARRERA!', ask: '¿Quién es tu favorito?', col: '#ff3b30'},
+  {id: 'ShortC2Enorme', ep: 2, t0: 93.6, dur: 28.4, hook: '¿QUÉ HAY BAJO TIERRA?', hook2: '✨', ask: '¿Qué crees que era?', col: '#ffd23f'},
+  {id: 'ShortC2Arriba', ep: 2, t0: 265.8, dur: 34.4, hook: '¡UNO, DOS, TRES...!', ask: '¿Te gusta ayudar a tus amigos?', col: '#ff8a1f'},
+  {id: 'ShortC2Suena', ep: 2, t0: 364.4, dur: 39.6, hook: '¿QUÉ SUENA?', hook2: '¡Adivina!', ask: '¿Adivinaste todos los sonidos?', col: '#c56bff'},
+  {id: 'ShortC2Salto', ep: 2, t0: 543.0, dur: 29.8, hook: '¡EL GRAN SALTO!', ask: '¿Tú también saltarías en el charco?', col: '#8a5a34'},
 ];
