@@ -246,7 +246,7 @@ export function brunoC2(t: number): BP {
     if (t < t0) { p.x = x0; p.z = JZ - 3; p.yaw = Math.PI / 2; p.mouth = 'grin'; p.lookX = 0.4; if (t > S('b16') && t < E('b16')) { p.lift = hop(t, S('b16') + 0.3, 0.4, 0.5); p.brow = 1; } p.mud = 0; return p; }
     if (t < M.bjump) { const u = easeIn(prog(t, t0, M.bjump)); p.x = lerp(x0, RAMP_X, u); p.z = lerp(JZ - 3, JZ, easeInOut(prog(t, t0, t0 + 1.2))); p.yaw = Math.PI / 2 - 0.15 * Math.sin(prog(t, t0, t0 + 1.2) * Math.PI); p.wheel = p.x / 0.43; p.mouth = 'grin'; p.brow = 0.2; p.browTilt = -0.6; p.beacon = 0.5 + 0.5 * Math.sin(t * 16); const r = p.x - (RAMP_X - 4); if (r > 0) { p.lift = (r / 4) * 0.9; p.pitch = -0.22; } return p; }
     if (t < M.splash) { const u = prog(t, M.bjump, M.splash); p.x = lerp(RAMP_X, PUD_X, u); p.z = JZ; p.yaw = Math.PI / 2; p.lift = 0.9 + Math.sin(u * Math.PI) * 2.2 - 0.9 * u; p.pitch = lerp(-0.22, 0.25, u); p.mouth = 'o'; p.eyeScale = 1.3; p.brow = 1; p.wheel = t * 30; return p; }
-    p.x = PUD_X; p.z = JZ; p.yaw = Math.PI / 2; p.mud = 1; p.lift = -0.18 + 0.2 * damped(t - M.splash, 2, 5); p.sy = 1 - 0.18 * damped(t - M.splash, 3, 6);
+    p.x = PUD_X; p.z = JZ; p.yaw = Math.PI / 2; p.mud = 1.45; p.lift = -0.18 + 0.2 * damped(t - M.splash, 2, 5); p.sy = 1 - 0.18 * damped(t - M.splash, 3, 6);
     p.mouth = t > S('b17') - 0.2 ? 'laugh' : 'o'; p.eyeScale = 1.15; p.brow = 0.9;
     if (t > S('b17')) { p.lift = (p.lift ?? 0) + Math.abs(Math.sin((t - S('b17')) * 7)) * 0.12; p.roll = Math.sin((t - S('b17')) * 7) * 0.05; }
     return p;
@@ -419,7 +419,7 @@ function shots(): Shot[] {
   const add = (t0: number, t1: number, f: (u: number, t: number) => Cam) => { if (t1 > t0) sh.push({t0, t1, f}); };
   const B = (t: number) => brunoC2(t);
   // A · gancho
-  add(0, M.garage0, (u) => F(mix3([DIG[0] - 7.5, 4.2, DIG[1] + 7.5], [DIG[0] - 5.5, 3.0, DIG[1] + 5.2], easeInOut(u)), mix3([DIG[0] + 2.5, 1.0, DIG[1] - 1.5], [DIG[0] + 2.2, 1.2, DIG[1] - 1.6], u), 46 - 4 * u));
+  add(0, M.garage0, (u) => F(mix3([DIG[0] + 0.5, 4.0, DIG[1] + 7.5], [DIG[0] + 0.8, 3.0, DIG[1] + 5.8], easeInOut(u)), mix3([DIG[0] + 2.8, 1.3, DIG[1] - 2.0], [DIG[0] + 3.0, 1.5, DIG[1] - 2.4], u), 46 - 4 * u));
   add(M.garage0, M.title0, (u) => F(mix3([21.0, 1.8, -8.0], [20.8, 1.7, -8.5], u), [20, 1.5, -12.4], 46));
   add(M.title0, M.title1 + 0.6, (u) => F(mix3([60, 55, 70], [30, 30, 45], easeInOut(u)), [0, 4, 0], 44));
   add(M.title1 + 0.6, M.exit0 - 0.4, (u) => F(mix3([10, 14, 26], [8, 8, 18], easeInOut(u)), mix3([0, 8, 0], [0, 6, 0], u), 46));
@@ -461,14 +461,14 @@ function shots(): Shot[] {
     const next = i < 2 ? M[quien[i + 1][1]] : S('b8');
     add(M[q], M[inn], (u) => F(mix3([DIG[0] - 12, 6, DIG[1] + 12], [DIG[0] - 11, 5.5, DIG[1] + 11], u), [DIG[0], 1, DIG[1]], 46));
     if (w === 'lola') {
-      add(M[inn], M[inn] + (S(line) - M[inn]) * 0.5, (u, t) => { const l = lolaC2(t)!; return F([79, 1.5, -90], [l.x, 1.6, l.z], 44); });
+      add(M[inn], M[inn] + (S(line) - M[inn]) * 0.5, (u, t) => { const l = lolaC2(t)!; return F([83, 1.6, -95.5], [l.x, 1.6, l.z], 46); });
       add(M[inn] + (S(line) - M[inn]) * 0.5, S(line) - 0.2, (u, t) => { const l = lolaC2(t)!; return follow(l.x, l.z, l.yaw, -8, -2, 2.2, 0, 1.6, 44); });
       add(S(line) - 0.2, next, (u, t) => { const l = lolaC2(t)!; return F([l.x + Math.sin(l.yaw) * 7 - 2, 2.4, l.z + Math.cos(l.yaw) * 7 + 1], [l.x, 2.0, l.z], 40); });
     } else if (w === 'coco') {
-      add(M[inn], S(line) - 0.3, (u, t) => { const c = cocoC2(t); const x = c ? c.x : 200; return F([COCO_STOP - 9, 2.2, RAIL_Z - 6.5], [x, 2.2, RAIL_Z], 44); });
+      add(M[inn], S(line) - 0.3, (u, t) => { const c = cocoC2(t); const x = c ? c.x : 200; return F([x - 7.5, 2.3, RAIL_Z - 6.5], [x + 1, 2.2, RAIL_Z], 44); });
       add(S(line) - 0.3, next, (u) => F(mix3([COCO_STOP - 7, 2.4, RAIL_Z - 5], [COCO_STOP - 6.4, 2.4, RAIL_Z - 4.6], u), [COCO_STOP, 2.3, RAIL_Z], 40));
     } else {
-      add(M[inn], S(line) - 0.3, (u, t) => { const c = chispaC2(t)!; return follow(c.x, c.z, c.yaw, 5.5, 1.5, 1.4, 2, 0.9, 50); });
+      add(M[inn], S(line) - 0.3, (u, t) => { const c = chispaC2(t)!; return follow(c.x, c.z, c.yaw, -6, 1.5, 1.2, 0, 0.9, 46); });
       add(S(line) - 0.3, next, (u) => F(mix3([CH_D.x - 3.8, 1.2, CH_D.z + 2.2], [CH_D.x - 3.4, 1.2, CH_D.z + 2.0], u), [CH_D.x, 0.9, CH_D.z], 38));
     }
   });
@@ -538,15 +538,15 @@ function shots(): Shot[] {
   add(M.cjump + 1.4, S('b16'), (u, t) => { const c = chispaC2(t)!; return F([c.x - 3, 1.3, c.z + 3.4], [c.x, 0.9, c.z], 40); });
   add(S('b16'), M.bjump - 1.0, (u, t) => { const b = B(t); return F([b.x + 4, 1.4, b.z + 4.4], [b.x, 1.4, b.z], 40); });
   add(M.bjump - 1.0, M.splash + 0.3, (u, t) => { const b = B(t); return F([PUD_X + 2, 1.0, JZ + 11], [b.x, (b.lift ?? 0) + 1.0, b.z], 46); });
-  add(M.splash + 0.3, S('b17'), () => F([PUD_X - 5, 2.2, JZ + 6], [PUD_X, 1, JZ], 44));
-  add(S('b17'), M.jump1, (u) => F(mix3([PUD_X - 1.5, 1.5, JZ + 4.6], [PUD_X - 1.2, 1.5, JZ + 4.0], u), [PUD_X, 1.4, JZ], 38));
+  add(M.splash + 0.3, S('b17'), () => F([PUD_X + 7, 2.4, JZ + 4], [PUD_X, 1, JZ], 46));
+  add(S('b17'), M.jump1, (u) => F(mix3([PUD_X + 4.8, 1.5, JZ + 1.4], [PUD_X + 4.2, 1.5, JZ + 1.2], u), [PUD_X, 1.3, JZ], 40));
   // J · repaso (las tomas siguen la línea remapeada) y pregunta
   add(S('n36') - 0.3, M.logo0, () => F([10, 6, 18], [0, 4, 0], 46));
   add(M.logo0, M.sp0, () => F([0, 30, 50], [0, 14, -40], 50));
   // avance: el mapa
-  add(M.sp0, M.mapfall + 0.8, (u) => F(mix3([BELL_P[0] + 2.6, 1.6, BELL_P[1] + 4.2], [BELL_P[0] + 2.2, 1.4, BELL_P[1] + 3.6], u), [BELL_P[0], 0.9, BELL_P[1]], 40));
-  add(M.mapfall + 0.8, S('b18'), (u) => F(mix3([BELL_P[0] + 1.6, 0.9, BELL_P[1] + 3.6], [BELL_P[0] + 1.3, 0.7, BELL_P[1] + 3.0], u), [BELL_P[0] + 0.8, 0.15, BELL_P[1] + 1.6], 36));
-  add(S('b18'), 605, (u, t) => { const b = B(t); return F([b.x - 1, 1.6, b.z + 4.4], [b.x, 1.5, b.z], 38 - 6 * u); });
+  add(M.sp0, M.mapfall + 0.8, (u) => F(mix3([1.4, 2.8, 13.0], [1.6, 2.4, 12.2], u), [2.9, 0.7, 5.4], 44));
+  add(M.mapfall + 0.8, S('b18'), (u) => F(mix3([3.1, 3.4, 7.6], [3.2, 3.0, 7.4], u), [BELL_P[0] + 0.9, 0.1, BELL_P[1] + 1.6], 42));
+  add(S('b18'), 605, (u, t) => { const b = B(t); return F([3.9, 1.6, 3.6], [b.x, 1.5, b.z], 42 - 6 * u); });
   return sh;
 }
 let SH: Shot[] | null = null;
@@ -564,6 +564,7 @@ function camAt2(te: number, t: number): Cam {
 
 // ---------------------------------------------------------------- objetos del juego de colores (junto a la vía, delante del tren)
 const ITEMS = ['coche_rojo', 'autobus', 'taxi', 'arbol_redondo_a'];
+const ITEM_CAMS = () => [0, 1, 2, 3].flatMap((i) => { const it = ITEM(i); return [[it.x - 1.5, it.z - 6.2], [it.x, it.z]] as [number, number][]; });
 function ITEM(i: number) {
   const x = cocoX(M[`col${i}`] + 1.2) - 1;
   return {x, z: RAIL_Z - 7.5, y: i === 3 ? 2.6 : i === 1 ? 1.8 : 1.0, m: ITEMS[i]};
@@ -626,15 +627,15 @@ const Cable: React.FC<{a: V3; b: V3}> = ({a, b}) => {
   );
 };
 const Hole: React.FC<{t: number}> = ({t}) => {
-  const glow = t < M.lift0 ? 1 : 1 - prog(t, M.lift0, M.lift0 + 2.5);
+  const glow = (t < M.hooked ? 1 : t < M.lift0 ? 0.35 : 0.35 * (1 - prog(t, M.lift0, M.lift0 + 2.5))) * (t < M.garage0 + 2 ? 1 : 0.7);
   const wet = prog(t, M.spray0 + 0.6, M.spray1);
   return (
     <group position={[DIG[0], 0, DIG[1]]}>
       <mesh position={[0, 0.03, 0]} rotation={[-Math.PI / 2, 0, 0]}><circleGeometry args={[2.6, 40]} /><meshStandardMaterial color={new THREE.Color('#2a1c0e').lerp(new THREE.Color('#1a1008'), wet)} roughness={1 - 0.7 * wet} /></mesh>
       <mesh position={[0, 0.2, 0]} rotation={[-Math.PI / 2, 0, 0]}><ringGeometry args={[2.6, 3.7, 40]} /><meshStandardMaterial color={new THREE.Color('#8a6a3c').lerp(new THREE.Color('#5a4024'), wet)} roughness={1 - 0.6 * wet} /></mesh>
-      {glow > 0.02 ? Array.from({length: 8}).map((_, i) => { const a = (i / 8) * Math.PI * 2 + t * 0.3; return <mesh key={i} position={[Math.cos(a) * 0.6, 3, Math.sin(a) * 0.6]} rotation={[Math.cos(a) * 0.25, 0, Math.sin(a) * 0.25]}><cylinderGeometry args={[0.05, 0.6, 6, 8, 1, true]} /><meshBasicMaterial color="#ffe27a" transparent opacity={(0.3 + 0.12 * Math.sin(t * 5 + i)) * glow} toneMapped={false} side={THREE.DoubleSide} depthWrite={false} /></mesh>; }) : null}
+      {glow > 0.02 ? Array.from({length: 8}).map((_, i) => { const a = (i / 8) * Math.PI * 2 + t * 0.3; return <mesh key={i} position={[Math.cos(a) * 0.6, 3, Math.sin(a) * 0.6]} rotation={[Math.cos(a) * 0.25, 0, Math.sin(a) * 0.25]}><cylinderGeometry args={[0.05, 0.6, 6, 8, 1, true]} /><meshBasicMaterial color="#ffe27a" transparent opacity={(0.2 + 0.08 * Math.sin(t * 5 + i)) * glow} toneMapped={false} side={THREE.DoubleSide} depthWrite={false} /></mesh>; }) : null}
       {glow > 0.02 ? <pointLight position={[0, 1.2, 0]} color="#ffd36b" intensity={50 * glow} distance={16} decay={2} /> : null}
-      {Array.from({length: 9}).map((_, i) => <mesh key={i} position={[Math.cos(i * 1.9) * 4.6, 0.35, Math.sin(i * 1.9) * 4.6]} scale={[1, 0.55, 1]} castShadow receiveShadow><sphereGeometry args={[0.9 + hash(i) * 0.5, 14, 10]} /><meshStandardMaterial color="#9a7444" roughness={1} /></mesh>)}
+      {Array.from({length: 7}).map((_, i) => <mesh key={i} position={[Math.cos(i * 0.9 + 2.2) * 4.9, 0.18, Math.sin(i * 0.9 + 2.2) * 4.9]} scale={[1, 0.42, 1]} castShadow receiveShadow><sphereGeometry args={[0.55 + hash(i) * 0.35, 14, 10]} /><meshStandardMaterial color="#9a7444" roughness={1} /></mesh>)}
     </group>
   );
 };
@@ -695,7 +696,7 @@ const TrafficLight: React.FC<{t: number}> = ({t}) => {
   const green = t > M.green, k = t > M.light0 - 3 && t < M.go1 + 4;
   if (!k) return null;
   return (
-    <group position={LIGHT}>
+    <group position={LIGHT} rotation={[0, -Math.PI / 2, 0]}>
       <mesh position={[0, 1.8, 0]} castShadow><cylinderGeometry args={[0.1, 0.12, 3.6, 12]} /><meshStandardMaterial color="#2f3b57" /></mesh>
       <mesh position={[0, 3.9, 0]} castShadow><boxGeometry args={[0.7, 1.9, 0.6]} /><meshStandardMaterial color="#2f3b57" roughness={0.5} /></mesh>
       {[['#ff3b30', 4.45, !green], ['#ffd23f', 3.9, false], ['#39c47a', 3.35, green]].map(([c, y, on], i) => (
@@ -844,6 +845,11 @@ const Overlay2: React.FC<{t: number; W: number; vert: boolean}> = ({t, W, vert})
       ) : null}
       {/* viaje */}
       {burst(popk(t, M.red, M.green), '¡ALTO!', '#ff3b30', 1350, 220, 170, 6)}
+      {t > M.red - 0.1 && t < M.go1 + 1.2 ? (
+        <div style={{position: 'absolute', left: 120 * u, top: 120 * u, width: 190 * u, padding: 22 * u, background: '#2f3b57', borderRadius: 50 * u, border: `${10 * u}px solid #fff`, transform: `scale(${popk(t, M.red - 0.1, M.go1 + 1.2)}) rotate(-4deg)`, boxShadow: `0 ${12 * u}px 0 rgba(0,0,0,0.25)`}}>
+          {['#ff3b30', '#ffd23f', '#39c47a'].map((c, i) => { const on = (i === 0 && t < M.green) || (i === 2 && t >= M.green); return <div key={i} style={{width: 140 * u, height: 140 * u, margin: `${8 * u}px auto`, borderRadius: '50%', background: on ? c : '#4a5470', boxShadow: on ? `0 0 ${40 * u}px ${c}` : 'none'}} />; })}
+        </div>
+      ) : null}
       {burst(popk(t, S('n49'), S('n49') + 1.6), '¡ADELANTE!', '#39c47a', 960, 220, 170)}
       {burst(popk(t, M.lookL, M.lookR), '👀 ⬅', '#3d8bff', 960, 220, 150, 0)}
       {burst(popk(t, M.lookR, M.go2), '➡ 👀', '#3d8bff', 960, 220, 150, 0)}
@@ -920,7 +926,7 @@ const Overlay2: React.FC<{t: number; W: number; vert: boolean}> = ({t, W, vert})
       ) : null}
       {t > M.sp0 ? <div style={{position: 'absolute', top: 40 * u, left: 0, width: '100%', textAlign: 'center', fontFamily: font, fontSize: 90 * u, color: '#ffd23f', ...st('#2b2350', 14), transform: `scale(${popk(t, M.sp0, 700)})`}}>PRÓXIMO CAPÍTULO</div> : null}
       {mp > 0.01 ? (
-        <AbsoluteFill style={{alignItems: 'center', justifyContent: 'center'}}>
+        <AbsoluteFill style={{alignItems: vert ? 'center' : 'flex-start', justifyContent: 'center', paddingLeft: vert ? 0 : 110 * u}}>
           <svg width={900 * u} height={600 * u} viewBox="0 0 900 600" style={{transform: `scale(${mp}) rotate(${-3 + Math.sin(t * 3)}deg)`, filter: 'drop-shadow(0 18px 0 rgba(0,0,0,0.25))'}}>
             <rect x="20" y="20" width="860" height="560" rx="30" fill="#f1deb0" stroke="#c9a467" strokeWidth="10" />
             <path d="M120 470 C 240 400, 300 480, 420 380 S 600 300, 700 170" fill="none" stroke="#8a5a34" strokeWidth="12" strokeDasharray="10 26" strokeLinecap="round" strokeDashoffset={-t * 60} />
@@ -940,7 +946,8 @@ const skipPlace = (p: Place) =>
   (p.m === 'maceta' && Math.hypot(p.x, p.z) < 12) ||
   (Math.hypot(p.x - DIG[0], p.z - DIG[1]) < 16) ||
   (Math.hypot(p.x - RAILX, p.z - (RAIL_Z - 4)) < 9) ||
-  (p.x > 120 && p.x < 190 && Math.abs(p.z - JZ) < 7) ||
+  (p.m !== 'charco_barro' && p.x > 120 && p.x < 190 && Math.abs(p.z - JZ) < 7) ||
+  ITEM_CAMS().some(([cx, cz]) => p.m !== 'farola' && Math.hypot(p.x - cx, p.z - cz) < 9) ||
   (p.x > 70 && p.x < 120 && p.z < -50 && (p.m === 'cono' || p.m === 'barrera_obra') && Math.abs(p.x - 110) < 6);
 const obstacle2 = (t: number): [number, number] | null => {
   if (t >= M.exit0 && t <= M.arrive + 1) { const b = brunoC2(t); return [b.x, b.z]; }
